@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détail des dépenses - Charlock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --text-color: #333;
+            --border-color: #E5E7EB;
+            --background-color: #F9FAFB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            position: relative;
+        }
+
+        .main-content {
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .back-button:hover {
+            background: var(--background-color);
+        }
+
+        .summary {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            flex: 1;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-title {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .summary-amount {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text-color);
+            letter-spacing: -1px;
+        }
+
+        .summary-amount.higher {
+            color: #F15B67;
+            text-shadow: 0 1px 2px rgba(241, 91, 103, 0.1);
+        }
+
+        .summary-amount.lower {
+            color: #8CC63F;
+            text-shadow: 0 1px 2px rgba(140, 198, 63, 0.1);
+        }
+
+        .expenses-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .expense-item {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            padding: 32px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 32px;
+            transition: background-color 0.2s;
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .expense-icon {
+            width: 64px;
+            height: 64px;
+            background: #f1f3f4;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .expense-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .expense-item:hover .expense-icon {
+            transform: scale(1.05);
+        }
+
+        .expense-icon .material-icons {
+            font-size: 36px;
+            color: #666;
+        }
+
+        .expense-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .expense-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 4px;
+        }
+
+        .expense-amounts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .amount-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .amount-label {
+            font-size: 15px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .amount-value {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .amount-value.higher {
+            color: #F15B67;
+            text-shadow: 0 1px 2px rgba(241, 91, 103, 0.1);
+        }
+
+        .amount-value.lower {
+            color: #8CC63F;
+            text-shadow: 0 1px 2px rgba(140, 198, 63, 0.1);
+        }
+
+        .asset-info {
+            margin-bottom: 32px;
+            padding: 32px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .asset-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #202124;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .asset-details {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .expense-values {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        .expense-real, .expense-provision {
+            display: flex;
+            align-items: center;
+        }
+
+        .radiator-icon {
+            fill: #666;
+        }
+
+        .water-drop-icon {
+            width: 32px;
+            height: 32px;
+            filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.2));
+        }
+
+        .filter-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+
+        .filter-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 16px;
+        }
+
+        .filter-section {
+            margin-bottom: 24px;
+        }
+
+        .filter-section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .year-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .year-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .year-option:hover {
+            background-color: #f1f3f4;
+        }
+
+        .year-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .year-option label {
+            font-size: 16px;
+            color: #202124;
+            cursor: pointer;
+        }
+
+        .ratio-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .ratio-filter:hover {
+            background-color: #f1f3f4;
+        }
+
+        .ratio-filter input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .ratio-filter label {
+            font-size: 16px;
+            color: #202124;
+            cursor: pointer;
+        }
+
+        .amount-label.ratio {
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <button class="back-button" onclick="window.location.href='patrimoine.html'">
+                    <span class="material-icons">arrow_back</span>
+                    Retour
+                </button>
+                <h1 id="asset-reference"></h1>
+            </div>
+
+            <div class="asset-info">
+                <h2 class="asset-title" id="asset-name"></h2>
+                <div class="asset-details" id="asset-address"></div>
+            </div>
+
+            <div class="summary">
+                <div class="summary-card">
+                    <div class="summary-title">Montant total des charges <span id="selected-year">2025</span></div>
+                    <div class="summary-amount" id="total-charges">0 €</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">Montant total des provisions</div>
+                    <div class="summary-amount" id="total-provisions">0 €</div>
+                </div>
+            </div>
+
+            <div class="expenses-list" id="expenses-list">
+                <!-- Les dépenses seront ajoutées ici dynamiquement -->
+            </div>
+        </div>
+
+        <div class="filter-panel">
+            <div class="filter-title">Filtres</div>
+            
+            <div class="filter-section">
+                <div class="filter-section-title">Année</div>
+                <div class="year-filter">
+                    <div class="year-option">
+                        <input type="radio" id="year-2023" name="year" value="2023">
+                        <label for="year-2023">2023</label>
+                    </div>
+                    <div class="year-option">
+                        <input type="radio" id="year-2024" name="year" value="2024">
+                        <label for="year-2024">2024</label>
+                    </div>
+                    <div class="year-option">
+                        <input type="radio" id="year-2025" name="year" value="2025" checked>
+                        <label for="year-2025">2025</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-section-title">Ratio des dépenses</div>
+                <div class="ratio-filter">
+                    <input type="checkbox" id="show-ratio" name="show-ratio">
+                    <label for="show-ratio">Dépenses par logement</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Définition de l'icône SVG du radiateur
+        const radiatorSvg = `
+            <svg class="radiator-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 4C2.44772 4 2 4.44772 2 5V19C2 19.5523 2.44772 20 3 20H21C21.5523 20 22 19.5523 22 19V5C22 4.44772 21.5523 4 21 4H3ZM4 6H20V18H4V6Z"/>
+                <path d="M6 8H8V16H6V8Z"/>
+                <path d="M10 8H12V16H10V8Z"/>
+                <path d="M14 8H16V16H14V8Z"/>
+                <path d="M18 8H20V16H18V8Z"/>
+                <circle cx="4" cy="5" r="1"/>
+                <path d="M3 7V17"/>
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de la goutte d'eau
+        const waterDropSvg = `
+            <svg class="water-drop-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="water-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#E3F2FD"/>
+                        <stop offset="50%" style="stop-color:#90CAF9"/>
+                        <stop offset="100%" style="stop-color:#2196F3"/>
+                    </linearGradient>
+                    <filter id="water-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="1"/>
+                        <feOffset dx="0" dy="2"/>
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.3"/>
+                        </feComponentTransfer>
+                        <feMerge>
+                            <feMergeNode/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path d="M12 2.5L17.5 9C21.5 13 21.5 18.5 17.5 21.5C13.5 24.5 8.5 23.5 6.5 21.5C4.5 19.5 2.5 14.5 6.5 9L12 2.5Z" 
+                    fill="url(#water-gradient)" 
+                    filter="url(#water-shadow)"
+                />
+                <path d="M12 2.5L17.5 9C21.5 13 21.5 18.5 17.5 21.5C13.5 24.5 8.5 23.5 6.5 21.5C4.5 19.5 2.5 14.5 6.5 9L12 2.5Z" 
+                    fill="white" 
+                    opacity="0.3"
+                    transform="translate(-1, -1) scale(0.9)"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de la flamme
+        const flameSvg = `
+            <svg class="flame-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="flame-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFD54F"/>
+                        <stop offset="50%" style="stop-color:#FF7043"/>
+                        <stop offset="100%" style="stop-color:#FF4081"/>
+                    </linearGradient>
+                    <filter id="flame-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="1"/>
+                        <feOffset dx="0" dy="2"/>
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.3"/>
+                        </feComponentTransfer>
+                        <feMerge>
+                            <feMergeNode/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path d="M12 3C14.5 6.5 15 8 15 10C15 12 14 12.5 12 12.5C10 12.5 9 12 9 10C9 8 9.5 6.5 12 3Z" 
+                    fill="url(#flame-gradient)" 
+                    filter="url(#flame-shadow)"
+                    transform="translate(4, 2) scale(0.7)"
+                />
+                <path d="M12 3C14.5 6.5 15 8 15 10C15 12 14 12.5 12 12.5C10 12.5 9 12 9 10C9 8 9.5 6.5 12 3Z" 
+                    fill="url(#flame-gradient)" 
+                    filter="url(#flame-shadow)"
+                    transform="translate(-1, 4) scale(0.9)"
+                />
+                <path d="M12 3C14.5 6.5 15 8 15 10C15 12 14 12.5 12 12.5C10 12.5 9 12 9 10C9 8 9.5 6.5 12 3Z" 
+                    fill="url(#flame-gradient)" 
+                    filter="url(#flame-shadow)"
+                    transform="translate(-4, 6) scale(0.8)"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG du compteur de chauffage
+        const heatingMeterSvg = `
+            <svg class="heating-meter-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="heating-meter-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FF6B6B"/>
+                        <stop offset="50%" style="stop-color:#FF4081"/>
+                        <stop offset="100%" style="stop-color:#FF1744"/>
+                    </linearGradient>
+                </defs>
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20Z" 
+                    fill="url(#heating-meter-gradient)"
+                />
+                <path d="M15 7C13.8 8.2 13 9.2 13 11V14C13 14.55 12.55 15 12 15C11.45 15 11 14.55 11 14V11C11 9.2 10.2 8.2 9 7C7.8 5.8 7 4.8 7 3C7 2.45 7.45 2 8 2C8.55 2 9 2.45 9 3C9 4.2 9.8 5.2 11 6.4C12.2 7.6 13 8.6 13 10V14C13 14.55 12.55 15 12 15C11.45 15 11 14.55 11 14V11"
+                    fill="none"
+                    stroke="url(#heating-meter-gradient)"
+                    stroke-width="1.5"
+                />
+                <path d="M12 16C13.1 16 14 16.9 14 18C14 19.1 13.1 20 12 20C10.9 20 10 19.1 10 18C10 16.9 10.9 16 12 16"
+                    fill="url(#heating-meter-gradient)"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de la chaudière
+        const boilerSvg = `
+            <svg class="boiler-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="boiler-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#64B5F6"/>
+                        <stop offset="100%" style="stop-color:#1976D2"/>
+                    </linearGradient>
+                </defs>
+                <path d="M6 2C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V4C20 2.89543 19.1046 2 18 2H6Z" 
+                    fill="url(#boiler-gradient)"
+                />
+                <circle cx="12" cy="8" r="2" fill="white"/>
+                <rect x="7" y="12" width="10" height="1.5" rx="0.75" fill="white"/>
+                <rect x="7" y="15" width="10" height="1.5" rx="0.75" fill="white"/>
+                <path d="M5 4.5C5 4.22386 5.22386 4 5.5 4H7.5C7.77614 4 8 4.22386 8 4.5V5.5C8 5.77614 7.77614 6 7.5 6H5.5C5.22386 6 5 5.77614 5 5.5V4.5Z" fill="white"/>
+                <path d="M16 4.5C16 4.22386 16.2239 4 16.5 4H18.5C18.7761 4 19 4.22386 19 4.5V5.5C19 5.77614 18.7761 6 18.5 6H16.5C16.2239 6 16 5.77614 16 5.5V4.5Z" fill="white"/>
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de l'ascenseur
+        const elevatorSvg = `
+            <svg class="elevator-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="elevator-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#9FA8DA"/>
+                        <stop offset="100%" style="stop-color:#3F51B5"/>
+                    </linearGradient>
+                </defs>
+                <path d="M4 4C4 2.89543 4.89543 2 6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4Z" 
+                    fill="url(#elevator-gradient)"
+                />
+                <rect x="6" y="4" width="12" height="16" rx="1" fill="white" opacity="0.2"/>
+                <path d="M8 7L12 3L16 7" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 17L12 21L16 17" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="7" y="11" width="10" height="2" rx="1" fill="white"/>
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de l'entretien immobilier
+        const buildingMaintenanceSvg = `
+            <svg class="building-maintenance-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="building-maintenance-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#4FC3F7"/>
+                        <stop offset="100%" style="stop-color:#2196F3"/>
+                    </linearGradient>
+                </defs>
+                <!-- Maison -->
+                <path d="M12 3L4 9V21H20V9L12 3Z" 
+                    fill="url(#building-maintenance-gradient)"
+                    stroke="#1565C0"
+                    stroke-width="1.5"
+                />
+                <!-- Toit -->
+                <path d="M3 9L12 2L21 9" 
+                    fill="none"
+                    stroke="#1565C0"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                />
+                <!-- Engrenage -->
+                <circle cx="18" cy="18" r="4" 
+                    fill="#90CAF9"
+                    stroke="#1565C0"
+                    stroke-width="1.5"
+                />
+                <path d="M18 16V20M16 18H20" 
+                    stroke="#1565C0"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                />
+                <!-- Marteau -->
+                <path d="M7 14L10 17M9 13L6 16" 
+                    stroke="#1565C0"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG de l'électricité
+        const electricitySvg = `
+            <svg class="electricity-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="electricity-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFE082"/>
+                        <stop offset="100%" style="stop-color:#FFA000"/>
+                    </linearGradient>
+                    <filter id="electricity-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+                    </filter>
+                </defs>
+                <!-- Ampoule -->
+                <circle cx="12" cy="12" r="10" 
+                    fill="url(#electricity-gradient)"
+                    filter="url(#electricity-glow)"
+                />
+                <!-- Éclair -->
+                <path d="M12 5L8 13H12L10 19L16 11H12L14 5H12Z" 
+                    fill="#FFF"
+                    filter="url(#electricity-glow)"
+                />
+                <!-- Prise électrique -->
+                <path d="M20 12H22M2 12H4" 
+                    stroke="#FFA000"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG des taxes récupérables
+        const taxesRecuperablesSvg = `
+            <svg class="taxes-recuperables-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="taxes-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#9575CD"/>
+                        <stop offset="100%" style="stop-color:#5E35B1"/>
+                    </linearGradient>
+                </defs>
+                <!-- Balai stylisé -->
+                <path d="M14 3L4 13l1.4 1.4L15 5z"
+                    stroke="#5E35B1"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    fill="none"
+                />
+                <!-- Poussière -->
+                <path d="M4 14c0 0 2 2 4 2s4-2 6-2s4 2 4 2"
+                    stroke="#9575CD"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    fill="none"
+                    opacity="0.8"
+                />
+                <path d="M3 16c0 0 2 2 4 2s4-2 6-2s4 2 4 2"
+                    stroke="#9575CD"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    fill="none"
+                    opacity="0.6"
+                />
+                <path d="M2 18c0 0 2 2 4 2s4-2 6-2s4 2 4 2"
+                    stroke="#9575CD"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    fill="none"
+                    opacity="0.4"
+                />
+            </svg>
+        `;
+
+        // Définition de l'icône SVG du garage
+        const garageSvg = `
+            <svg class="garage-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="garage-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#90CAF9"/>
+                        <stop offset="100%" style="stop-color:#1976D2"/>
+                    </linearGradient>
+                </defs>
+                <!-- Structure du garage -->
+                <path d="M2 8L12 3L22 8V20H2V8Z" 
+                    fill="url(#garage-gradient)"
+                    stroke="#1565C0"
+                    stroke-width="1.5"
+                />
+                <!-- Toit -->
+                <path d="M4 8L12 4L20 8" 
+                    fill="none"
+                    stroke="#1565C0"
+                    stroke-width="2"
+                />
+                <!-- Porte de garage -->
+                <rect x="4" y="10" width="16" height="10" 
+                    fill="#BBDEFB"
+                    stroke="#1565C0"
+                    stroke-width="1"
+                />
+                <!-- Lignes horizontales de la porte -->
+                <path d="M4 13H20M4 16H20" 
+                    stroke="#1565C0"
+                    stroke-width="1"
+                />
+                <!-- Voiture stylisée -->
+                <path d="M7 15H17V18H7V15Z" 
+                    fill="#1565C0"
+                />
+                <path d="M8 17H10V18H8V17ZM14 17H16V18H14V17Z" 
+                    fill="#90CAF9"
+                />
+            </svg>
+        `;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('Chargement des données...');
+                
+                // Charger les données des résidences
+                const residencesResponse = await fetch('residences_data.json');
+                if (!residencesResponse.ok) {
+                    throw new Error('Erreur lors du chargement des données des résidences');
+                }
+                const residencesData = await residencesResponse.json();
+                window.residencesData = residencesData;
+
+                // Récupérer les résidences sélectionnées depuis localStorage
+                const selectedResidences = JSON.parse(localStorage.getItem('selectedResidences')) || [];
+                console.log('Résidences sélectionnées:', selectedResidences.length);
+
+                // Si aucune résidence n'est sélectionnée, utiliser toutes les résidences
+                window.selectedResidences = selectedResidences.length > 0 ? selectedResidences : 
+                    residencesData.map(r => ({
+                        id: r.intent_reference,
+                        label: r.label,
+                        adresse: r.adresse
+                    }));
+
+                // Charger les données de charges
+                const chargesResponse = await fetch('charlock_test_cursor_final_output_v7.json');
+                if (!chargesResponse.ok) {
+                    throw new Error('Erreur lors du chargement des données de charges');
+                }
+                const chargesData = await chargesResponse.json();
+                window.globalChargesData = chargesData;
+
+                // Ajouter l'event listener sur la case à cocher
+                document.getElementById('show-ratio').addEventListener('change', function() {
+                    console.log('Changement de ratio détecté:', this.checked);
+                    applyFilters();
+                });
+
+                // Ajouter les event listeners sur les boutons radio des années
+                document.querySelectorAll('input[name="year"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        console.log('Changement d\'année détecté:', this.value);
+                        applyFilters();
+                    });
+                });
+
+                // Charger les données initiales pour 2025
+                loadDataForYear(2025);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        });
+
+        function loadDataForYear(year) {
+            const chargesData = window.globalChargesData;
+            const selectedResidences = window.selectedResidences;
+            const showRatio = document.getElementById('show-ratio').checked;
+
+            console.log('Chargement des données pour l\'année:', year);
+            console.log('Nombre de résidences sélectionnées:', selectedResidences.length);
+
+            // Initialiser les totaux globaux
+            let globalTotalCharges = 0;
+            let globalTotalProvisions = 0;
+            const globalChargesByCategory = {};
+
+            // Traiter chaque résidence sélectionnée
+            selectedResidences.forEach(selectedResidence => {
+                // Récupérer le nombre de logements pour cette résidence
+                const residenceData = window.residencesData.find(r => {
+                    const selectedId = parseInt(selectedResidence.id);
+                    const residenceId = parseInt(r.intent_reference);
+                    return selectedId === residenceId;
+                });
+
+                const nbLogements = residenceData ? parseInt(residenceData["Nombre de logements de la résidence"]) : 1;
+
+                // Filtrer les charges pour la résidence courante et l'année spécifiée
+                const assetCharges = chargesData.filter(item => {
+                    return String(parseInt(item["Intent référence"])) === String(parseInt(selectedResidence.id)) &&
+                           item["Année"] === year;
+                });
+
+                // Traiter les charges de la résidence courante
+                assetCharges.forEach(charge => {
+                    const category = charge["Catégorie de charge"];
+                    if (!globalChargesByCategory[category]) {
+                        globalChargesByCategory[category] = {
+                            categorie: category,
+                            valeur_reelle: 0,
+                            provision: 0,
+                            nbLogements: 0
+                        };
+                    }
+                    
+                    const montant = parseFloat(charge["Montant"]) || 0;
+                    if (charge["Type"] === "Valeur réelle") {
+                        globalChargesByCategory[category].valeur_reelle += montant;
+                        globalTotalCharges += montant;
+                    } else if (charge["Type"] === "Provision") {
+                        globalChargesByCategory[category].provision += montant;
+                        globalTotalProvisions += montant;
+                    }
+                    globalChargesByCategory[category].nbLogements += nbLogements;
+                });
+            });
+
+            // Appliquer le ratio si nécessaire
+            if (showRatio) {
+                Object.values(globalChargesByCategory).forEach(category => {
+                    if (category.nbLogements > 0) {
+                        category.valeur_reelle = category.valeur_reelle / category.nbLogements;
+                        category.provision = category.provision / category.nbLogements;
+                    }
+                });
+                
+                // Calculer les moyennes des totaux
+                const totalLogements = Object.values(globalChargesByCategory).reduce((sum, cat) => Math.max(sum, cat.nbLogements), 0);
+                if (totalLogements > 0) {
+                    globalTotalCharges = globalTotalCharges / totalLogements;
+                    globalTotalProvisions = globalTotalProvisions / totalLogements;
+                }
+            }
+
+            // Mettre à jour l'interface
+            document.getElementById('asset-reference').textContent = selectedResidences.length === 1 ? 
+                `Référence: ${selectedResidences[0].id}` : 
+                `${selectedResidences.length} bâtiments sélectionnés`;
+
+            document.getElementById('asset-name').textContent = selectedResidences.length === 1 ? 
+                selectedResidences[0].label : 
+                'Synthèse multi-bâtiments';
+
+            document.getElementById('asset-address').textContent = selectedResidences.length === 1 ? 
+                selectedResidences[0].adresse : 
+                `${selectedResidences.length} bâtiments analysés`;
+
+            document.getElementById('selected-year').textContent = year;
+
+            // Afficher les totaux
+            const totalChargesElement = document.getElementById('total-charges');
+            totalChargesElement.textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(globalTotalCharges);
+            totalChargesElement.className = 'summary-amount ' + (globalTotalCharges > globalTotalProvisions ? 'higher' : 'lower');
+
+            document.getElementById('total-provisions').textContent = 
+                new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(globalTotalProvisions);
+
+            // Afficher les catégories de charges
+            const expensesList = document.getElementById('expenses-list');
+            expensesList.innerHTML = '';
+            
+            Object.values(globalChargesByCategory).forEach(category => {
+                const expenseItem = document.createElement('div');
+                expenseItem.className = 'expense-item';
+
+                const isHigher = category.valeur_reelle > category.provision;
+                
+                expenseItem.innerHTML = `
+                    <div class="expense-icon">
+                        ${getCategoryIcon(category.categorie)}
+                    </div>
+                    <div class="expense-content">
+                        <div class="expense-name">${category.categorie}</div>
+                        <div class="expense-amounts">
+                            <div class="amount-column">
+                                <div class="amount-label">Montant réel${showRatio ? '<span class="ratio"> par logement</span>' : ''}</div>
+                                <div class="amount-value ${isHigher ? 'higher' : 'lower'}">
+                                    ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(category.valeur_reelle)}
+                                </div>
+                            </div>
+                            <div class="amount-column">
+                                <div class="amount-label">Provision${showRatio ? '<span class="ratio"> par logement</span>' : ''}</div>
+                                <div class="amount-value">
+                                    ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(category.provision)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                expensesList.appendChild(expenseItem);
+            });
+        }
+
+        function applyFilters() {
+            const selectedYear = document.querySelector('input[name="year"]:checked').value;
+            loadDataForYear(parseInt(selectedYear));
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Montant total des dépenses d\'eau': 'water_custom',
+                'Montant total des dépenses de chauffage': 'flame',
+                'Montant total des dépenses totales pour le chauffage et l\'ECS': 'flame_large',
+                'Montant des dépenses de comptage et de répartition des frais de chauffage': 'heating_meter',
+                'Montant des dépenses d\'entretien des installations de production-distribution d\'énergie': 'boiler',
+                'Montant des dépenses d\'entretien des ascenseurs': 'elevator_custom',
+                'Montant total des dépenses d\'entretien immobilier': 'building_maintenance',
+                'Montant total des dépenses d\'électricité des usages généraux': 'electricity',
+                'Montant total des dépenses de taxes récupérables (OM + balayage)': 'taxes_recuperables',
+                'Montant total des dépenses affectées aux garages': 'garage',
+                'Montant total des dépenses de gardiennage': 'security',
+                'Montant total des dépenses d\'administration': 'admin_panel_settings',
+                'Montant total des dépenses de copropriété': 'apartment',
+                'Montant total des dépenses de parking': 'local_parking',
+                'Montant total des dépenses de sécurité': 'security',
+                'Montant total des dépenses de télésurveillance': 'videocam',
+                'Montant total des dépenses d\'assurance': 'shield',
+                'Montant total des dépenses de taxes': 'receipt_long',
+                'Montant total des dépenses de travaux': 'construction',
+                'Montant total des dépenses de VMC': 'air',
+                'Montant total des dépenses de désinfection': 'sanitizer',
+                'Montant total des dépenses de déchets': 'delete',
+                'Montant total des dépenses de télécommunication': 'wifi',
+                'Montant total des dépenses de portail': 'door_sliding',
+                'Montant total des dépenses de contrôle d\'accès': 'key',
+                'Montant total des dépenses d\'interphonie': 'phone_in_talk',
+                'Montant total des dépenses de ventilation': 'air',
+                'Montant total des dépenses de climatisation': 'ac_unit'
+            };
+
+            if (icons[category] === 'flame_large') {
+                return flameSvg.replace('class="flame-icon"', 'class="flame-icon flame-icon-large"');
+            } else if (icons[category] === 'flame') {
+                return flameSvg;
+            } else if (icons[category] === 'water_custom') {
+                return waterDropSvg;
+            } else if (icons[category] === 'heating_meter') {
+                return heatingMeterSvg;
+            } else if (icons[category] === 'boiler') {
+                return boilerSvg;
+            } else if (icons[category] === 'elevator_custom') {
+                return elevatorSvg;
+            } else if (icons[category] === 'building_maintenance') {
+                return buildingMaintenanceSvg;
+            } else if (icons[category] === 'electricity') {
+                return electricitySvg;
+            } else if (icons[category] === 'taxes_recuperables') {
+                return taxesRecuperablesSvg;
+            } else if (icons[category] === 'garage') {
+                return garageSvg;
+            }
+            return `<span class="material-icons">${icons[category] || 'payments'}</span>`;
+        }
+
+        // Styles pour les icônes
+        const customStyles = `
+            .flame-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(255, 64, 129, 0.2));
+            }
+            
+            .flame-icon-large {
+                width: 48px;
+                height: 48px;
+            }
+
+            .heating-meter-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(255, 23, 68, 0.2));
+            }
+
+            .boiler-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(25, 118, 210, 0.2));
+            }
+
+            .elevator-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(63, 81, 181, 0.2));
+            }
+
+            .building-maintenance-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.2));
+            }
+
+            .electricity-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(255, 160, 0, 0.3));
+            }
+
+            .taxes-recuperables-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(94, 53, 177, 0.3));
+            }
+
+            .garage-icon {
+                width: 40px;
+                height: 40px;
+                filter: drop-shadow(0 2px 4px rgba(25, 118, 210, 0.3));
+            }
+        `;
+        
+        // Ajouter les styles
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = customStyles;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html> 

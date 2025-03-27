@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrimoine - Charlock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00A3FF;
+            --text-color: #333;
+            --border-color: #E5E7EB;
+            --background-color: #F9FAFB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .filters-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 380px;
+            height: calc(100vh - 40px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .filters-header {
+            padding: 24px;
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filters-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-bar {
+            margin: 16px 24px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px;
+            padding-left: 40px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-bar .material-icons {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6B7280;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #2563EB;
+        }
+
+        .filter-groups {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+            padding-bottom: 24px;
+        }
+
+        .filter-group {
+            padding: 0 24px;
+            margin-bottom: 12px;
+        }
+
+        .filter-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+
+        .filter-group-header:hover {
+            background: #F3F4F6;
+        }
+
+        .filter-group-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .filter-group-title .material-icons {
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+
+        .filter-group.collapsed .filter-group-title .material-icons {
+            transform: rotate(-90deg);
+        }
+
+        .filter-count {
+            background: #E5E7EB;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #374151;
+        }
+
+        .filter-list {
+            padding: 8px 0;
+            display: none;
+        }
+
+        .filter-group:not(.collapsed) .filter-list {
+            display: block;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .filter-item:hover {
+            background: #F3F4F6;
+        }
+
+        .filter-item.active {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        .filter-item input[type="checkbox"] {
+            margin-right: 12px;
+        }
+
+        .bottom-actions {
+            margin-top: auto;
+            padding: 24px;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .action-button.primary {
+            background: #2563EB;
+            color: white;
+            border: none;
+        }
+
+        .action-button.secondary {
+            background: white;
+            border: 1px solid #E5E7EB;
+            color: #374151;
+        }
+
+        /* Styles pour les popups de la carte */
+        .popup-content {
+            padding: 20px;
+            width: 100%;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 2;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+            line-height: 1.2;
+            flex: 1;
+            margin-right: 12px;
+        }
+
+        .popup-subtitle {
+            font-size: 13px;
+            color: #6B7280;
+            margin-bottom: 16px;
+        }
+
+        .popup-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .popup-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #F3F4F6;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .popup-tag .material-icons {
+            font-size: 18px;
+            color: #6B7280;
+        }
+
+        .popup-characteristics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .characteristic-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background: rgba(0, 210, 255, 0.1);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #00A3FF;
+            font-weight: 500;
+        }
+
+        .show-expenses-button {
+            width: 100%;
+            padding: 12px 16px;
+            background: #00D2FF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        .show-expenses-button:hover {
+            background: #00A3FF;
+        }
+
+        .show-expenses-button .material-icons {
+            font-size: 20px;
+        }
+
+        .popup-favorite {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #6B7280;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .popup-favorite:hover {
+            background: #F3F4F6;
+        }
+
+        .popup-favorite .material-icons {
+            font-size: 24px;
+        }
+
+        .popup-favorite.active .material-icons {
+            color: #EF4444;
+        }
+
+        /* Styles pour la modale de détails */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .detail-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .detail-group h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-group p {
+            font-size: 0.875rem;
+            color: var(--text-color);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Styles pour les menus de filtres */
+        .filter-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .filter-menu-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-menu-item:hover {
+            background: var(--background-color);
+        }
+
+        .filter-menu-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Styles pour les marqueurs de la carte */
+        .marker-cluster {
+            background: var(--primary-color);
+            border-radius: 50%;
+            color: white;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .marker-cluster div {
+            background: rgba(0, 163, 255, 0.8);
+            width: 30px;
+            height: 30px;
+            margin-left: 5px;
+            margin-top: 5px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styles pour les icônes Material */
+        .material-icons {
+            font-size: 1.25rem;
+            color: inherit;
+        }
+
+        /* Styles pour la barre supérieure */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 420px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .favorites-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+
+        .favorites-button:hover {
+            background: #F3F4F6;
+            border-color: #D1D5DB;
+        }
+
+        .favorites-button .material-icons {
+            font-size: 20px;
+            color: #EF4444;
+        }
+
+        .residence-count {
+            font-size: 16px;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .show-list-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .show-list-button:hover {
+            background: #F3F4F6;
+        }
+
+        /* Styles pour les boutons flottants du bas */
+        .floating-actions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            z-index: 2;
+        }
+
+        .floating-button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .floating-button.primary {
+            background: #00D2FF;
+            color: white;
+            border: none;
+        }
+
+        .floating-button.secondary {
+            background: white;
+            border: 1px solid #E5E7EB;
+            color: #374151;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* Styles pour les popups Leaflet */
+        .leaflet-popup {
+            position: absolute;
+            z-index: 1000;
+        }
+
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            background: white;
+            width: auto !important;
+            max-width: calc(100vw - 440px) !important;
+            max-height: calc(100vh - 200px) !important;
+            overflow-y: auto;
+        }
+
+        .leaflet-popup-content {
+            margin: 0 !important;
+            width: auto !important;
+            min-width: 280px !important;
+            max-width: 100% !important;
+        }
+
+        .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: white;
+        }
+
+        .custom-popup .leaflet-popup-content {
+            color: #111827;
+        }
+
+        /* Assurer que la popup est au-dessus de la carte */
+        .leaflet-popup-pane {
+            z-index: 1000 !important;
+        }
+
+        .leaflet-popup-content * {
+            z-index: 1001 !important;
+        }
+
+        /* Ajuster le z-index des autres éléments */
+        #map {
+            z-index: 1;
+        }
+
+        .filters-panel {
+            z-index: 2;
+        }
+
+        .top-bar {
+            z-index: 2;
+        }
+
+        .floating-actions {
+            z-index: 2;
+        }
+
+        /* Styles additionnels pour la popup */
+        .popup-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 1000;
+        }
+
+        .popup-close .material-icons {
+            font-size: 20px;
+            color: #6B7280;
+        }
+
+        .popup-close:hover .material-icons {
+            color: #111827;
+        }
+
+        .popup-favorite .material-icons {
+            font-size: 24px;
+            color: #6B7280;
+            transition: color 0.2s;
+        }
+
+        .popup-favorite:hover .material-icons {
+            color: #EF4444;
+        }
+
+        /* Styles pour la modale des favoris */
+        .favorites-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .favorites-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .favorites-modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .favorites-modal.active .favorites-modal-content {
+            transform: translateY(0);
+        }
+
+        .favorites-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid #E5E7EB;
+            position: sticky;
+            top: 0;
+            background: white;
+            border-radius: 16px 16px 0 0;
+            z-index: 1;
+        }
+
+        .favorites-modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .favorites-modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #6B7280;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorites-modal-close:hover {
+            background: #F3F4F6;
+            color: #111827;
+        }
+
+        .favorites-list {
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .favorite-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #F9FAFB;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .favorite-item:hover {
+            background: #F3F4F6;
+        }
+
+        .favorite-info {
+            flex: 1;
+            margin-right: 16px;
+        }
+
+        .favorite-name {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .favorite-name-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #00A3FF;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            display: none;
+        }
+
+        .favorite-name-input.active {
+            display: block;
+        }
+
+        .favorite-count {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .favorite-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .favorite-action-button {
+            background: white;
+            border: 1px solid #E5E7EB;
+            cursor: pointer;
+            padding: 8px;
+            color: #6B7280;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorite-action-button:hover {
+            background: #F3F4F6;
+            color: #111827;
+            border-color: #D1D5DB;
+        }
+
+        .favorite-action-button .material-icons {
+            font-size: 20px;
+        }
+
+        .new-favorite-form {
+            padding: 24px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 12px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .new-favorite-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: #F9FAFB;
+        }
+
+        .new-favorite-input:focus {
+            outline: none;
+            border-color: #00A3FF;
+            background: white;
+        }
+
+        .new-favorite-button {
+            padding: 12px 24px;
+            background: #00A3FF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .new-favorite-button:hover {
+            background: #0093E9;
+        }
+
+        /* Styles pour les résultats de recherche */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-height: 500px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-results-content {
+            padding: 12px;
+        }
+
+        .search-section {
+            margin-bottom: 16px;
+        }
+
+        .search-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .search-section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B7280;
+            padding: 8px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            margin-bottom: 8px;
+        }
+
+        .search-section-header .material-icons {
+            font-size: 20px;
+        }
+
+        .search-result-item {
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background: #F3F4F6;
+        }
+
+        .result-title {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .result-subtitle {
+            display: block;
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        /* Styles pour la mise en évidence des résultats */
+        .search-result-item mark {
+            background-color: rgba(0, 163, 255, 0.2);
+            color: inherit;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .search-show-more {
+            padding: 8px 12px;
+            color: #6B7280;
+            font-size: 12px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Ajouter le style pour le menu déroulant des sélections */
+        .favorites-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            min-width: 240px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .favorites-dropdown.active {
+            display: block;
+        }
+
+        .favorites-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid #E5E7EB;
+            font-weight: 500;
+            color: #6B7280;
+            font-size: 14px;
+        }
+
+        .favorites-dropdown-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .favorites-dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .favorites-dropdown-item:hover {
+            background: #F3F4F6;
+        }
+
+        .favorites-dropdown-item.active {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        .favorites-dropdown-item .material-icons {
+            font-size: 20px;
+        }
+
+        /* Styles pour le panneau latéral gauche */
+        .left-panel {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .left-panel.active {
+            left: 0;
+        }
+
+        .left-panel-header {
+            padding: 24px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .left-panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .left-panel-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #6B7280;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .left-panel-close:hover {
+            background: #F3F4F6;
+            color: #111827;
+        }
+
+        .residences-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px;
+            height: calc(100vh - 80px);
+        }
+
+        .residence-list-item {
+            padding: 20px;
+            border-radius: 12px;
+            background: white;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #E5E7EB;
+        }
+
+        .residence-list-item:hover {
+            background: #F3F4F6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .residence-list-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .residence-list-item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .residence-list-item-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #F3F4F6;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #374151;
+        }
+
+        .tag-energy {
+            background: rgba(0, 210, 255, 0.1);
+            color: #00A3FF;
+            font-weight: 500;
+            border: 1px solid rgba(0, 163, 255, 0.2);
+        }
+
+        .tag-dpe {
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+            font-weight: 500;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .residence-list-item-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .info-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            background: #F3F4F6;
+            color: #374151;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .info-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-tag .material-icons {
+            font-size: 18px;
+            color: #6B7280;
+        }
+
+        .tag-energy {
+            background: rgba(0, 163, 255, 0.1);
+            color: #00A3FF;
+            font-weight: 500;
+            border: 1px solid rgba(0, 163, 255, 0.2);
+        }
+
+        .tag-dpe {
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+            font-weight: 500;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .expense-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            background: #F3F4F6;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .expense-value:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .expense-value.positive {
+            color: #DC2626;
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .expense-value.negative {
+            color: #059669;
+            background: rgba(5, 150, 105, 0.1);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .expense-label {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 4px;
+            display: flex;
+            font-weight: 500;
+            width: 100%;
+            text-align: center;
+            min-height: 40px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .expense-item:last-child .expense-label {
+            align-items: flex-start;
+            padding-top: 4px;
+        }
+
+        .residence-list-item-expenses {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            margin-top: 16px;
+            gap: 16px;
+        }
+
+        .expense-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            align-items: center;
+            text-align: center;
+        }
+
+        .btn-show-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+
+        .btn-show-list:hover {
+            background: #F3F4F6;
+            border-color: #D1D5DB;
+        }
+
+        .btn-show-list .material-icons {
+            font-size: 20px;
+            color: #6B7280;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+</head>
+<body>
+    <div class="container">
+        <div id="map"></div>
+        
+        <div class="top-bar">
+            <div class="residence-count">148 résidences (45,567 logements)</div>
+            <div class="top-bar-actions">
+                <button class="favorites-button" onclick="showFavoritesModal()">
+                    <span class="material-icons">favorite</span>
+                    Mes sélections
+                </button>
+                <button class="btn-show-list">
+                    <span class="material-icons">arrow_forward</span>
+                    afficher la liste des résidences
+                </button>
+            </div>
+        </div>
+
+        <div class="filters-panel">
+            <div class="filters-header">
+                <h1 class="filters-title">Filtrer par</h1>
+                <button class="action-button-icon">
+                    <span class="material-icons">refresh</span>
+                </button>
+            </div>
+
+            <div class="search-bar">
+                <span class="material-icons">search</span>
+                <input type="text" placeholder="ville, rue, résidence...">
+            </div>
+
+            <div class="filter-groups">
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Date de construction
+                        </div>
+                        <span class="filter-count">5</span>
+                    </div>
+                    <div class="filter-list" data-filter="annee_construction"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Mode de production chauffage
+                        </div>
+                        <span class="filter-count">3</span>
+                    </div>
+                    <div class="filter-list" data-filter="mode_production_chauffage"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Mode de production ECS
+                        </div>
+                        <span class="filter-count">3</span>
+                    </div>
+                    <div class="filter-list" data-filter="mode_production_ecs"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Nature de l'énergie chauffage
+                        </div>
+                        <span class="filter-count">3</span>
+                    </div>
+                    <div class="filter-list" data-filter="nature_energie_chauffage"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Nature de l'énergie ECS
+                        </div>
+                        <span class="filter-count">3</span>
+                    </div>
+                    <div class="filter-list" data-filter="nature_energie_ecs"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Postes de charges
+                        </div>
+                        <span class="filter-count">6</span>
+                    </div>
+                    <div class="filter-list" data-filter="postes_charges"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            DPE
+                        </div>
+                        <span class="filter-count">5</span>
+                    </div>
+                    <div class="filter-list" data-filter="lettre_dpe"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Copropriété
+                        </div>
+                        <span class="filter-count">2</span>
+                    </div>
+                    <div class="filter-list" data-filter="copropriete"></div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-group-header">
+                        <div class="filter-group-title">
+                            <span class="material-icons">expand_more</span>
+                            Dernières réhabilitation
+                        </div>
+                        <span class="filter-count">4</span>
+                    </div>
+                    <div class="filter-list" data-filter="derniere_rehabilitation"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="floating-actions">
+            <button class="floating-button secondary" onclick="showFavoritesModal()">
+                <span class="material-icons">favorite_border</span>
+                Ajouter en favoris (148)
+            </button>
+            <button class="floating-button primary">
+                Afficher les dépenses
+                <span class="badge">148</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modale des favoris -->
+    <div class="favorites-modal">
+        <div class="favorites-modal-content">
+            <div class="favorites-modal-header">
+                <h2 class="favorites-modal-title">Mes sélections favorites</h2>
+                <button class="favorites-modal-close">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="favorites-list">
+                <!-- Les favoris seront ajoutés ici dynamiquement -->
+            </div>
+            <form class="new-favorite-form">
+                <input type="text" class="new-favorite-input" placeholder="Nom de la sélection" required>
+                <button type="submit" class="new-favorite-button">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="left-panel">
+        <div class="left-panel-header">
+            <h2 class="left-panel-title">Liste des résidences</h2>
+            <button class="left-panel-close">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="residences-list">
+            <!-- La liste des résidences sera injectée ici -->
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        // Variables globales
+        let map, markerClusterGroup;
+        let residences = [];
+        let filteredResidences = [];
+        let visibleResidences = [];
+        let allMatchingResidences = new Set();
+        let activeFilters = {
+            annee_construction: [],
+            mode_production_chauffage: [],
+            mode_production_ecs: [],
+            nature_energie_chauffage: [],
+            nature_energie_ecs: [],
+            postes_charges: [],
+            lettre_dpe: [],
+            copropriete: [],
+            derniere_rehabilitation: []
+        };
+        let activeSelection = null;
+
+        // Fonction globale pour afficher les dépenses
+        window.showExpenses = function(residenceId) {
+            console.log('Affichage des dépenses pour la résidence:', residenceId);
+            
+            // Trouver la résidence correspondante
+            const residence = residences.find(r => r.id === residenceId);
+            if (residence) {
+                // Sauvegarder la résidence dans le localStorage
+                localStorage.setItem('selectedResidences', JSON.stringify([residence]));
+                
+                // Rediriger vers la page des dépenses
+                window.location.href = 'depenses.html';
+            } else {
+                console.error('Résidence non trouvée:', residenceId);
+            }
+        };
+
+        // Initialisation de la carte
+        function initializeMap() {
+            console.log('Initialisation de la carte...');
+            map = L.map('map', {
+                center: [46.603354, 1.888334],
+                zoom: 6,
+                minZoom: 5,
+                maxZoom: 18
+            });
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            markerClusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true
+            });
+
+            map.addLayer(markerClusterGroup);
+            console.log('Carte initialisée');
+        }
+
+        // Fonction pour créer le contenu du popup
+        function createPopupContent(residence) {
+            if (!residence.id) {
+                console.error('Résidence sans ID:', residence);
+                return '';
+            }
+            
+            console.log('Création du popup pour la résidence:', residence.id);
+            
+            // Déterminer les caractéristiques uniques
+            const characteristics = new Set();
+            if (residence.type_habitat === 'Collectif') characteristics.add('Collectif');
+            if (residence.mode_production_chauffage === 'SOL') characteristics.add('SOL');
+            if (residence.mode_production_ecs === 'GEO') characteristics.add('GEO');
+            
+            const popupContent = document.createElement('div');
+            popupContent.className = 'popup-content';
+            popupContent.innerHTML = `
+                <div class="popup-header">
+                    <h3 class="popup-title">${residence.label || ''}</h3>
+                    <button class="popup-favorite">
+                        <span class="material-icons">favorite_border</span>
+                    </button>
+                </div>
+                
+                <div class="popup-info">
+                    <div class="popup-subtitle">
+                        Année de construction : ${residence.annee_construction || 'Non renseignée'} - 
+                        ${residence.nb_logements || '0'} logements
+                    </div>
+
+                    <div class="popup-characteristics">
+                        ${Array.from(characteristics).map(char => `
+                            <span class="characteristic-tag">${char}</span>
+                        `).join('')}
+                    </div>
+
+                    <div class="popup-tags">
+                        <div class="popup-tag">
+                            <span class="material-icons">local_fire_department</span>
+                            ${residence.mode_production_chauffage || 'Individuel'}
+                        </div>
+                        <div class="popup-tag">
+                            <span class="material-icons">water_drop</span>
+                            ${residence.mode_production_ecs || 'SOL'}
+                        </div>
+                        <div class="popup-tag">
+                            <span class="material-icons">power</span>
+                            ${residence.nature_energie_chauffage || 'GN'}
+                        </div>
+                    </div>
+
+                    <button class="show-expenses-button">
+                        Afficher le détail des dépenses
+                        <span class="material-icons">arrow_forward</span>
+                    </button>
+                </div>
+            `;
+
+            // Ajouter le gestionnaire d'événements pour le bouton des dépenses
+            const expensesButton = popupContent.querySelector('.show-expenses-button');
+            if (expensesButton) {
+                expensesButton.addEventListener('click', () => {
+                    showExpenses(residence.id);
+                });
+            }
+
+            return popupContent;
+        }
+
+        // Fonction de recherche améliorée
+        function searchResidences(searchTerm) {
+            // Réinitialiser allMatchingResidences
+            allMatchingResidences = new Set();
+
+            if (!searchTerm.trim()) {
+                filteredResidences = [...residences];
+                updateMap();
+                updateUI();
+                const searchResults = document.querySelector('.search-results');
+                if (searchResults) {
+                    searchResults.style.display = 'none';
+                }
+                return;
+            }
+
+            const term = searchTerm.toLowerCase();
+            const results = {
+                residences: [], // Mettre les résidences en premier
+                villes: [],
+                adresses: [],
+                filtres: []
+            };
+
+            // Fonction pour mettre en évidence le texte correspondant
+            function highlightText(text, term) {
+                if (!text) return '';
+                const regex = new RegExp(`(${term})`, 'gi');
+                return text.replace(regex, '<mark>$1</mark>');
+            }
+
+            residences.forEach(residence => {
+                let matched = false;
+                let score = 0; // Score de pertinence
+                
+                // Recherche par nom de résidence (priorité la plus élevée)
+                if (residence.label && residence.label.toLowerCase().includes(term)) {
+                    results.residences.push({
+                        ...residence,
+                        score: 100 + (residence.label.toLowerCase().startsWith(term) ? 50 : 0),
+                        highlightedLabel: highlightText(residence.label, term)
+                    });
+                    allMatchingResidences.add(residence);
+                    matched = true;
+                    score = Math.max(score, 100);
+                }
+                
+                // Recherche par ville
+                if (residence.intent_address_city && residence.intent_address_city.toLowerCase().includes(term)) {
+                    results.villes.push({
+                        ...residence,
+                        score: 80,
+                        highlightedCity: highlightText(residence.intent_address_city, term)
+                    });
+                    allMatchingResidences.add(residence);
+                    matched = true;
+                    score = Math.max(score, 80);
+                }
+                
+                // Recherche par adresse complète
+                const adresse = `${residence.intent_address_way || ''} ${residence.intent_address_zip || ''} ${residence.intent_address_city || ''}`.toLowerCase();
+                if (adresse.includes(term)) {
+                    results.adresses.push({
+                        ...residence,
+                        score: 60,
+                        highlightedAddress: highlightText(adresse, term)
+                    });
+                    allMatchingResidences.add(residence);
+                    matched = true;
+                    score = Math.max(score, 60);
+                }
+            });
+
+            // Trier les résultats par score
+            results.residences.sort((a, b) => b.score - a.score);
+            results.villes.sort((a, b) => b.score - a.score);
+            results.adresses.sort((a, b) => b.score - a.score);
+
+            // Mettre à jour la carte avec les résultats
+            filteredResidences = Array.from(allMatchingResidences);
+            updateMap();
+            updateUI();
+
+            // Afficher les résultats dans la liste déroulante
+            displaySearchResults(results);
+        }
+
+        // Fonction pour afficher les résultats de recherche
+        function displaySearchResults(results) {
+            let searchResultsContainer = document.querySelector('.search-results');
+            if (!searchResultsContainer) {
+                const resultsContainer = document.createElement('div');
+                resultsContainer.className = 'search-results';
+                document.querySelector('.search-bar').appendChild(resultsContainer);
+                searchResultsContainer = resultsContainer;
+            }
+
+            const resultsHTML = `
+                <div class="search-results-content">
+                    ${results.residences.length > 0 ? `
+                        <div class="search-section">
+                            <div class="search-section-header">
+                                <span class="material-icons">apartment</span>
+                                Résidences (${results.residences.length})
+                            </div>
+                            ${results.residences.slice(0, 5).map(r => `
+                                <div class="search-result-item" data-id="${r.id}">
+                                    <span class="result-title">${r.highlightedLabel}</span>
+                                    <span class="result-subtitle">${r.intent_address_city || ''}</span>
+                                </div>
+                            `).join('')}
+                            ${results.residences.length > 5 ? `
+                                <div class="search-show-more">
+                                    ${results.residences.length - 5} résultats supplémentaires...
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+
+                    ${results.villes.length > 0 ? `
+                        <div class="search-section">
+                            <div class="search-section-header">
+                                <span class="material-icons">location_city</span>
+                                Villes (${results.villes.length})
+                            </div>
+                            ${results.villes.slice(0, 5).map(r => `
+                                <div class="search-result-item" data-id="${r.id}">
+                                    <span class="result-title">${r.highlightedCity}</span>
+                                    <span class="result-subtitle">${r.nb_logements} logements</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+
+                    ${results.adresses.length > 0 ? `
+                        <div class="search-section">
+                            <div class="search-section-header">
+                                <span class="material-icons">place</span>
+                                Adresses (${results.adresses.length})
+                            </div>
+                            ${results.adresses.slice(0, 5).map(r => `
+                                <div class="search-result-item" data-id="${r.id}">
+                                    <span class="result-title">${r.highlightedAddress}</span>
+                                    <span class="result-subtitle">${r.intent_address_zip || ''} ${r.intent_address_city || ''}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            searchResultsContainer.innerHTML = resultsHTML;
+            searchResultsContainer.style.display = 'block';
+
+            // Ajouter les gestionnaires d'événements pour les résultats
+            document.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id;
+                    const residence = residences.find(r => r.id === id);
+                    if (residence) {
+                        // Centrer la carte sur la résidence
+                        map.setView([residence.latitude, residence.longitude], 16);
+                        // Fermer les résultats de recherche
+                        searchResultsContainer.style.display = 'none';
+                        // Vider le champ de recherche
+                        document.querySelector('.search-bar input').value = '';
+                        
+                        // Filtrer pour n'afficher que cette résidence
+                        filteredResidences = [residence];
+                        updateMap();
+                        updateUI();
+                    }
+                });
+            });
+        }
+
+        // Fonction pour basculer le favori
+        function toggleFavorite(button) {
+            const icon = button.querySelector('.material-icons');
+            button.classList.toggle('active');
+            if (button.classList.contains('active')) {
+                icon.textContent = 'favorite';
+            } else {
+                icon.textContent = 'favorite_border';
+            }
+        }
+
+        // Fonction pour mettre à jour les résidences visibles
+        function updateVisibleResidences() {
+            const bounds = map.getBounds();
+            
+            // Réinitialiser les résidences visibles
+            visibleResidences = [];
+            let totalLogements = 0;
+            
+            // Parcourir toutes les résidences filtrées
+            filteredResidences.forEach(residence => {
+                if (residence.latitude && residence.longitude) {
+                    const latLng = L.latLng(residence.latitude, residence.longitude);
+                    if (bounds.contains(latLng)) {
+                        visibleResidences.push(residence);
+                        totalLogements += parseInt(residence.nb_logements) || 0;
+                    }
+                }
+            });
+
+            const visibleCount = visibleResidences.length;
+            console.log('Résidences visibles:', visibleCount);
+            console.log('Total logements visibles:', totalLogements);
+
+            // Mettre à jour le nombre dans le bouton des dépenses
+            const depensesButton = document.querySelector('.floating-button.primary');
+            if (depensesButton) {
+                depensesButton.innerHTML = `
+                    Afficher les dépenses
+                    <span class="badge">${visibleCount}</span>
+                `;
+            }
+
+            // Mettre à jour le nombre dans le bouton des favoris
+            const favorisButton = document.querySelector('.floating-button.secondary');
+            if (favorisButton) {
+                favorisButton.innerHTML = `
+                    <span class="material-icons">favorite_border</span>
+                    Ajouter en favoris (${visibleCount})
+                `;
+            }
+
+            // Mettre à jour le compteur en haut
+            const residenceCount = document.querySelector('.residence-count');
+            if (residenceCount) {
+                residenceCount.textContent = `${visibleCount} résidences (${totalLogements.toLocaleString()} logements)`;
+            }
+        }
+
+        // Mise à jour de l'interface utilisateur
+        function updateUI() {
+            updateVisibleResidences();
+        }
+
+        // Application des filtres
+        function applyFilters() {
+            // Ne filtrer que parmi les résidences avec des coordonnées valides
+            filteredResidences = residences
+                .filter(residence => residence.latitude && residence.longitude)
+                .filter(residence => {
+                    return Object.entries(activeFilters).every(([key, values]) => {
+                        if (values.length === 0) return true;
+                        return values.includes(residence[key]);
+                    });
+                });
+
+            updateMap();
+            updateUI();
+            updateFilterCounts();
+        }
+
+        // Gestionnaire pour les en-têtes de groupe de filtres
+        document.querySelectorAll('.filter-group-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const group = header.closest('.filter-group');
+                group.classList.toggle('collapsed');
+            });
+        });
+
+        // Fonction pour initialiser les filtres
+        function initializeFilters() {
+            const filterTypes = {
+                annee_construction: {
+                    key: "annee_construction",
+                    label: "Date de construction",
+                    dataField: "annee_construction"
+                },
+                mode_production_chauffage: {
+                    key: "mode_production_chauffage",
+                    label: "Mode de production chauffage",
+                    dataField: "mode_production_chauffage"
+                },
+                mode_production_ecs: {
+                    key: "mode_production_ecs",
+                    label: "Mode de production ECS",
+                    dataField: "mode_production_ecs"
+                },
+                nature_energie_chauffage: {
+                    key: "nature_energie_chauffage",
+                    label: "Nature de l'énergie chauffage",
+                    dataField: "nature_energie_chauffage"
+                },
+                nature_energie_ecs: {
+                    key: "nature_energie_ecs",
+                    label: "Nature de l'énergie ECS",
+                    dataField: "nature_energie_ecs"
+                },
+                lettre_dpe: {
+                    key: "lettre_dpe",
+                    label: "DPE",
+                    dataField: "lettre_dpe"
+                },
+                derniere_rehabilitation: {
+                    key: "derniere_rehabilitation",
+                    label: "Dernière réhabilitation",
+                    dataField: "derniere_rehabilitation"
+                }
+            };
+
+            // Ne considérer que les résidences avec des coordonnées valides
+            const validResidences = residences.filter(r => r.latitude && r.longitude);
+
+            Object.values(filterTypes).forEach(filterType => {
+                const filterList = document.querySelector(`[data-filter="${filterType.key}"]`);
+                if (!filterList) return;
+
+                // Vider la liste existante
+                filterList.innerHTML = '';
+
+                // Obtenir les valeurs uniques et leur compte
+                const valueCounts = new Map();
+                validResidences.forEach(residence => {
+                    const value = residence[filterType.dataField];
+                    if (value) {
+                        valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
+                    }
+                });
+
+                // Trier les valeurs
+                const sortedValues = Array.from(valueCounts.keys()).sort((a, b) => String(a).localeCompare(String(b)));
+
+                // Créer les éléments de filtre
+                sortedValues.forEach(value => {
+                    const count = valueCounts.get(value);
+                    const item = document.createElement('div');
+                    item.className = 'filter-item';
+                    item.innerHTML = `
+                        <input type="checkbox" id="${filterType.key}-${value}">
+                        <label for="${filterType.key}-${value}">${value}</label>
+                        <span class="filter-count">${String(count).padStart(2, '0')}</span>
+                    `;
+
+                    const checkbox = item.querySelector('input');
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) {
+                            if (!activeFilters[filterType.key]) {
+                                activeFilters[filterType.key] = [];
+                            }
+                            activeFilters[filterType.key].push(value);
+                        } else {
+                            const index = activeFilters[filterType.key].indexOf(value);
+                            if (index !== -1) {
+                                activeFilters[filterType.key].splice(index, 1);
+                            }
+                        }
+                        applyFilters();
+                    });
+
+                    filterList.appendChild(item);
+                });
+
+                // Mettre à jour le compteur du groupe
+                const headerCount = filterList.closest('.filter-group').querySelector('.filter-count');
+                if (headerCount) {
+                    const totalCount = Array.from(valueCounts.values()).reduce((sum, count) => sum + count, 0);
+                    headerCount.textContent = String(totalCount).padStart(2, '0');
+                }
+            });
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Initialisation de l\'application...');
+            
+            // Initialiser la carte
+            initializeMap();
+            
+            // Charger les données
+            await loadData();
+
+            // Initialiser tous les gestionnaires d'événements
+            const showListButton = document.querySelector('.btn-show-list');
+            const leftPanel = document.querySelector('.left-panel');
+            const leftPanelClose = document.querySelector('.left-panel-close');
+            const favoritesModalClose = document.querySelector('.favorites-modal-close');
+            const favoriteForm = document.querySelector('.new-favorite-form');
+            const modal = document.querySelector('.favorites-modal');
+
+            // Gestionnaires pour le panneau latéral
+            if (showListButton && leftPanel && leftPanelClose) {
+                showListButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    leftPanel.classList.add('active');
+                    updateResidencesList();
+                });
+
+                leftPanelClose.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    leftPanel.classList.remove('active');
+                });
+            }
+
+            // Gestionnaires pour la modale des favoris
+            if (favoritesModalClose) {
+                favoritesModalClose.addEventListener('click', () => {
+                    closeFavoritesModal();
+                });
+            }
+
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeFavoritesModal();
+                    }
+                });
+
+                const modalContent = modal.querySelector('.favorites-modal-content');
+                if (modalContent) {
+                    modalContent.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            }
+
+            if (favoriteForm) {
+                favoriteForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const input = favoriteForm.querySelector('.new-favorite-input');
+                    const name = input.value.trim();
+                    if (name) {
+                        saveFavorite(name);
+                        input.value = '';
+                    }
+                });
+            }
+
+            // Initialiser la recherche
+            const searchInput = document.querySelector('.search-bar input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    searchResidences(e.target.value);
+                });
+
+                document.addEventListener('click', (e) => {
+                    const searchResults = document.querySelector('.search-results');
+                    const searchBar = document.querySelector('.search-bar');
+                    if (searchResults && !searchBar.contains(e.target)) {
+                        searchResults.style.display = 'none';
+                    }
+                });
+            }
+
+            // Initialiser les autres composants
+            initializeFilters();
+            updateFavoritesList();
+
+            // Ajouter le gestionnaire pour le bouton des dépenses
+            const depensesButton = document.querySelector('.floating-button.primary');
+            if (depensesButton) {
+                depensesButton.addEventListener('click', () => {
+                    // Sauvegarder les résidences visibles dans le localStorage
+                    localStorage.setItem('selectedResidences', JSON.stringify(visibleResidences));
+                    // Rediriger vers la page des dépenses
+                    window.location.href = 'depenses.html';
+                });
+            }
+        });
+
+        function updateFilterCounts() {
+            const filterTypes = {
+                annee_construction: "Date de construction",
+                mode_production_chauffage: "Mode de production chauffage",
+                mode_production_ecs: "Mode de production ECS",
+                nature_energie_chauffage: "Nature de l'énergie chauffage",
+                nature_energie_ecs: "Nature de l'énergie ECS",
+                lettre_dpe: "DPE",
+                derniere_rehabilitation: "Dernière réhabilitation"
+            };
+
+            // Ne considérer que les résidences avec des coordonnées valides
+            const validResidences = filteredResidences.filter(r => r.latitude && r.longitude);
+
+            Object.keys(filterTypes).forEach(currentFilterKey => {
+                const filterList = document.querySelector(`[data-filter="${currentFilterKey}"]`);
+                if (!filterList) return;
+
+                // Compter les occurrences pour chaque valeur du filtre
+                const valueCounts = new Map();
+                validResidences.forEach(residence => {
+                    const value = residence[currentFilterKey];
+                    if (value) {
+                        valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
+                    }
+                });
+
+                // Mettre à jour les compteurs individuels
+                filterList.querySelectorAll('.filter-item').forEach(item => {
+                    const label = item.querySelector('label');
+                    const countSpan = item.querySelector('.filter-count');
+                    if (!label || !countSpan) return;
+
+                    const value = label.textContent.trim();
+                    const count = valueCounts.get(value) || 0;
+                    countSpan.textContent = String(count).padStart(2, '0');
+
+                    // Mettre à jour l'opacité en fonction du compte
+                    item.style.opacity = count === 0 ? '0.5' : '1';
+                });
+
+                // Mettre à jour le compteur total du groupe
+                const headerCount = filterList.closest('.filter-group').querySelector('.filter-count');
+                if (headerCount) {
+                    const totalCount = Array.from(valueCounts.values()).reduce((sum, count) => sum + count, 0);
+                    headerCount.textContent = String(totalCount).padStart(2, '0');
+                }
+            });
+        }
+
+        // Ajouter les écouteurs d'événements pour la carte
+        map.on('zoomend moveend', function() {
+            console.log('Zoom ou déplacement détecté');
+            updateVisibleResidences();
+        });
+
+        // S'assurer que updateVisibleResidences est appelé après l'ajout des marqueurs
+        function updateMap() {
+            if (!map || !markerClusterGroup) {
+                console.error('Map ou markerClusterGroup non initialisé');
+                return;
+            }
+            
+            console.log('Mise à jour de la carte avec', filteredResidences.length, 'résidences');
+            markerClusterGroup.clearLayers();
+
+            let markersCount = 0;
+            filteredResidences.forEach(residence => {
+                if (!residence.latitude || !residence.longitude) {
+                    console.log('Résidence sans coordonnées:', residence.label);
+                    return;
+                }
+
+                const marker = L.marker([residence.latitude, residence.longitude]);
+                const popupContent = createPopupContent(residence);
+                
+                const popup = L.popup({
+                    maxWidth: 400,
+                    minWidth: 300,
+                    className: 'custom-popup',
+                    closeButton: true,
+                    autoClose: false,
+                    closeOnEscapeKey: true,
+                    closeOnClick: false
+                });
+
+                popup.setContent(popupContent);
+                marker.bindPopup(popup);
+
+                marker.on('click', function() {
+                    console.log('Marqueur cliqué pour la résidence:', residence.label, 'ID:', residence.id);
+                    marker.openPopup();
+                });
+
+                markerClusterGroup.addLayer(marker);
+                markersCount++;
+            });
+
+            console.log('Nombre de marqueurs ajoutés:', markersCount);
+
+            if (markersCount > 0) {
+                try {
+                    const bounds = markerClusterGroup.getBounds();
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                    console.log('Vue de la carte ajustée aux marqueurs');
+                } catch (error) {
+                    console.error('Erreur lors de l\'ajustement de la vue:', error);
+                }
+            }
+
+            updateVisibleResidences();
+        }
+
+        // Fonctions pour la gestion des favoris
+        function saveFavorite(name) {
+            console.log('Sauvegarde du favori:', name);
+            console.log('Résidences visibles:', visibleResidences.length);
+            
+            if (!visibleResidences || visibleResidences.length === 0) {
+                console.error('Aucune résidence à sauvegarder');
+                return;
+            }
+
+            try {
+                let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                const newFavorite = {
+                    id: Date.now(),
+                    name: name,
+                    residences: visibleResidences,
+                    date: new Date().toISOString()
+                };
+                
+                console.log('Nouveau favori:', newFavorite);
+                favorites.push(newFavorite);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                
+                console.log('Favori sauvegardé avec succès');
+                updateFavoritesList();
+                
+                setTimeout(() => {
+                    closeFavoritesModal();
+                }, 300);
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde du favori:', error);
+            }
+        }
+
+        function deleteFavorite(id) {
+            let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            favorites = favorites.filter(f => f.id !== id);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavoritesList();
+        }
+
+        function editFavoriteName(id) {
+            const favoriteItem = document.querySelector(`[data-favorite-id="${id}"]`);
+            const nameText = favoriteItem.querySelector('.favorite-name-text');
+            const nameInput = favoriteItem.querySelector('.favorite-name-input');
+            
+            nameText.classList.add('hidden');
+            nameInput.classList.add('active');
+            nameInput.value = nameText.textContent;
+            nameInput.focus();
+        }
+
+        function saveFavoriteName(id, newName) {
+            let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            const favorite = favorites.find(f => f.id === id);
+            if (favorite) {
+                favorite.name = newName;
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoritesList();
+            }
+        }
+
+        function loadFavorite(id) {
+            console.log('Chargement du favori:', id);
+            
+            // Réinitialiser les filtres avant de charger la nouvelle sélection
+            resetFilters();
+            
+            if (id === 'all') {
+                // Charger l'ensemble du patrimoine (uniquement les résidences avec coordonnées valides)
+                const validResidences = residences.filter(r => r.latitude && r.longitude);
+                activeSelection = {
+                    id: 'all',
+                    name: 'Ensemble du patrimoine',
+                    residences: validResidences
+                };
+                filteredResidences = validResidences;
+            } else {
+                // Charger un favori spécifique
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                const favorite = favorites.find(f => f.id === id);
+                
+                if (favorite && favorite.residences && favorite.residences.length > 0) {
+                    activeSelection = favorite;
+                    filteredResidences = favorite.residences;
+                } else {
+                    console.error('Favori non trouvé ou sans résidences');
+                    return;
+                }
+            }
+            
+            // Mettre à jour l'interface
+            updateSelectionButton();
+            updateMap();
+            updateUI();
+            
+            // Mettre à jour les filtres pour la nouvelle sélection
+            updateFiltersForSelection(filteredResidences);
+            
+            // Sauvegarder la sélection active
+            saveActiveSelection();
+            
+            closeFavoritesModal();
+            
+            console.log('Sélection chargée:', activeSelection.name);
+        }
+
+        function updateFavoritesList() {
+            console.log('Mise à jour de la liste des favoris');
+            const favoritesList = document.querySelector('.favorites-list');
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            
+            console.log('Favoris trouvés:', favorites.length);
+            
+            if (favoritesList) {
+                favoritesList.innerHTML = favorites.map(favorite => `
+                    <div class="favorite-item" data-favorite-id="${favorite.id}">
+                        <div class="favorite-info">
+                            <div class="favorite-name">
+                                <span class="favorite-name-text">${favorite.name}</span>
+                                <input type="text" class="favorite-name-input" value="${favorite.name}">
+                            </div>
+                            <div class="favorite-count">${favorite.residences.length} résidences</div>
+                        </div>
+                        <div class="favorite-actions">
+                            <button class="favorite-action-button" onclick="loadFavorite(${favorite.id})" title="Charger">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                            <button class="favorite-action-button" onclick="editFavoriteName(${favorite.id})" title="Modifier">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="favorite-action-button" onclick="deleteFavorite(${favorite.id})" title="Supprimer">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Ajouter les gestionnaires d'événements pour l'édition des noms
+                document.querySelectorAll('.favorite-name-input').forEach(input => {
+                    input.addEventListener('blur', function() {
+                        const favoriteId = parseInt(this.closest('.favorite-item').dataset.favoriteId);
+                        const newName = this.value.trim();
+                        if (newName) {
+                            saveFavoriteName(favoriteId, newName);
+                        }
+                        this.classList.remove('active');
+                        this.previousElementSibling.classList.remove('hidden');
+                    });
+
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.blur();
+                        }
+                    });
+                });
+            }
+        }
+
+        function showFavoritesModal() {
+            console.log('Ouverture de la modale des favoris');
+            
+            const modal = document.querySelector('.favorites-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    
+                    // Mettre à jour la liste des favoris avec l'option "Ensemble du patrimoine"
+                    const favoritesList = document.querySelector('.favorites-list');
+                    if (favoritesList) {
+                        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                        
+                        // Compter uniquement les résidences avec des coordonnées valides
+                        const validResidences = residences.filter(r => r.latitude && r.longitude);
+                        
+                        favoritesList.innerHTML = `
+                            <div class="favorite-item" data-favorite-id="all">
+                                <div class="favorite-info">
+                                    <div class="favorite-name">
+                                        <span class="favorite-name-text">Ensemble du patrimoine</span>
+                                    </div>
+                                    <div class="favorite-count">${validResidences.length} résidences</div>
+                                </div>
+                                <div class="favorite-actions">
+                                    <button class="favorite-action-button" onclick="loadFavorite('all')" title="Charger">
+                                        <span class="material-icons">visibility</span>
+                                    </button>
+                                </div>
+                            </div>
+                            ${favorites.map(favorite => `
+                                <div class="favorite-item" data-favorite-id="${favorite.id}">
+                                    <div class="favorite-info">
+                                        <div class="favorite-name">
+                                            <span class="favorite-name-text">${favorite.name}</span>
+                                            <input type="text" class="favorite-name-input" value="${favorite.name}">
+                                        </div>
+                                        <div class="favorite-count">${favorite.residences.length} résidences</div>
+                                    </div>
+                                    <div class="favorite-actions">
+                                        <button class="favorite-action-button" onclick="loadFavorite(${favorite.id})" title="Charger">
+                                            <span class="material-icons">visibility</span>
+                                        </button>
+                                        <button class="favorite-action-button" onclick="editFavoriteName(${favorite.id})" title="Modifier">
+                                            <span class="material-icons">edit</span>
+                                        </button>
+                                        <button class="favorite-action-button" onclick="deleteFavorite(${favorite.id})" title="Supprimer">
+                                            <span class="material-icons">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        `;
+                    }
+                }, 10);
+            }
+        }
+
+        function closeFavoritesModal() {
+            const modal = document.querySelector('.favorites-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        // Ajouter la fonction pour mettre à jour le bouton de sélection
+        function updateSelectionButton() {
+            const favoritesButton = document.querySelector('.favorites-button');
+            if (favoritesButton && activeSelection) {
+                favoritesButton.innerHTML = `
+                    <span class="material-icons">favorite</span>
+                    ${activeSelection.name}
+                `;
+            }
+        }
+
+        // Fonction pour réinitialiser les filtres
+        function resetFilters() {
+            // Réinitialiser les filtres actifs
+            Object.keys(activeFilters).forEach(key => {
+                activeFilters[key] = [];
+            });
+
+            // Décocher toutes les cases
+            document.querySelectorAll('.filter-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+
+        // Fonction pour mettre à jour les compteurs des filtres en fonction de la sélection active
+        function updateFiltersForSelection(selectedResidences) {
+            const filterTypes = {
+                annee_construction: "Date de construction",
+                mode_production_chauffage: "Mode de production chauffage",
+                mode_production_ecs: "Mode de production ECS",
+                nature_energie_chauffage: "Nature de l'énergie chauffage",
+                nature_energie_ecs: "Nature de l'énergie ECS",
+                lettre_dpe: "DPE",
+                derniere_rehabilitation: "Dernière réhabilitation"
+            };
+
+            Object.keys(filterTypes).forEach(filterKey => {
+                const filterList = document.querySelector(`[data-filter="${filterKey}"]`);
+                if (!filterList) return;
+
+                // Compter les occurrences pour chaque valeur du filtre
+                const valueCounts = new Map();
+                selectedResidences.forEach(residence => {
+                    const value = residence[filterKey];
+                    if (value) {
+                        valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
+                    }
+                });
+
+                // Mettre à jour les compteurs et l'état des filtres
+                filterList.querySelectorAll('.filter-item').forEach(item => {
+                    const label = item.querySelector('label');
+                    const countSpan = item.querySelector('.filter-count');
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    
+                    if (!label || !countSpan) return;
+
+                    const value = label.textContent.trim();
+                    const count = valueCounts.get(value) || 0;
+                    
+                    // Mettre à jour le compteur
+                    countSpan.textContent = String(count).padStart(2, '0');
+                    
+                    // Mettre à jour l'apparence et l'état du filtre
+                    item.style.opacity = count === 0 ? '0.5' : '1';
+                    item.style.pointerEvents = count === 0 ? 'none' : 'auto';
+                    checkbox.disabled = count === 0;
+                });
+
+                // Mettre à jour le compteur total du groupe
+                const headerCount = filterList.closest('.filter-group').querySelector('.filter-count');
+                if (headerCount) {
+                    const totalCount = Array.from(valueCounts.values()).reduce((sum, count) => sum + count, 0);
+                    headerCount.textContent = String(totalCount).padStart(2, '0');
+                }
+            });
+        }
+
+        // Ajouter les fonctions de gestion de la sélection active
+        function saveActiveSelection() {
+            if (activeSelection) {
+                localStorage.setItem('activeSelection', JSON.stringify(activeSelection));
+                console.log('Sélection active sauvegardée:', activeSelection.name);
+            }
+        }
+
+        function restoreActiveSelection() {
+            const savedSelection = localStorage.getItem('activeSelection');
+            if (savedSelection) {
+                try {
+                    const selection = JSON.parse(savedSelection);
+                    console.log('Restauration de la sélection:', selection.name);
+                    
+                    if (selection.id === 'all') {
+                        // Charger l'ensemble du patrimoine
+                        const validResidences = residences.filter(r => r.latitude && r.longitude);
+                        activeSelection = {
+                            id: 'all',
+                            name: 'Ensemble du patrimoine',
+                            residences: validResidences
+                        };
+                        filteredResidences = validResidences;
+                    } else {
+                        // Charger une sélection spécifique
+                        activeSelection = selection;
+                        filteredResidences = selection.residences;
+                    }
+                    
+                    // Mettre à jour l'interface
+                    updateSelectionButton();
+                    updateMap();
+                    updateUI();
+                    updateFiltersForSelection(filteredResidences);
+                } catch (error) {
+                    console.error('Erreur lors de la restauration de la sélection:', error);
+                }
+            }
+        }
+
+        // Chargement et traitement des données
+        async function loadData() {
+            try {
+                console.log('Début du chargement des données...');
+                
+                // Charger les données des résidences
+                const residencesResponse = await fetch('residences_data.json');
+                if (!residencesResponse.ok) {
+                    throw new Error(`Erreur HTTP: ${residencesResponse.status}`);
+                }
+                const rawData = await residencesResponse.json();
+
+                // Charger les données de charges
+                console.log('Chargement des données de charges...');
+                const chargesResponse = await fetch('charlock_test_cursor_final_output_v7.json');
+                if (!chargesResponse.ok) {
+                    throw new Error('Erreur lors du chargement des données de charges');
+                }
+                window.globalChargesData = await chargesResponse.json();
+                
+                // Examiner la structure des données de charges
+                if (window.globalChargesData && window.globalChargesData.length > 0) {
+                    console.log('Structure des données de charges:', Object.keys(window.globalChargesData[0]));
+                    console.log('Exemple de données de charges:', window.globalChargesData[0]);
+                }
+                
+                // Transformer les données des résidences
+                residences = rawData.map(residence => {
+                    const lat = residence.intent_latitude ? parseFloat(String(residence.intent_latitude).replace(',', '.')) : null;
+                    const lng = residence.intent_longitude ? parseFloat(String(residence.intent_longitude).replace(',', '.')) : null;
+                    
+                    return {
+                        id: residence.intent_reference,
+                        label: residence.label,
+                        adresse: `${residence.intent_address_way || ''}, ${residence.intent_address_zip || ''} ${residence.intent_address_city || ''}`.trim(),
+                        latitude: lat,
+                        longitude: lng,
+                        nb_logements: parseInt(residence["Nombre de logements de la résidence"]) || 0,
+                        surface_habitable: parseFloat(String(residence["Surface habitable totale de la résidence"]).replace(',', '.')) || 0,
+                        annee_construction: residence["Année de construction"],
+                        mode_production_chauffage: residence["Modalité de production de chauffage"],
+                        mode_production_ecs: residence["Modalité de production ECS"],
+                        nature_energie_chauffage: residence["Nature de l'énergie chauffage"],
+                        nature_energie_ecs: residence["Nature de l'énergie ECS"],
+                        lettre_dpe: residence["Lettre DPE"],
+                        derniere_rehabilitation: residence["Dernière réhabilitation"]
+                    };
+                });
+
+                // Examiner la structure des résidences
+                if (residences.length > 0) {
+                    console.log('Exemple de résidence:', residences[0]);
+                }
+
+                // Initialiser les filtres
+                initializeFilters();
+                
+                // Tenter de restaurer la sélection active
+                const savedSelection = localStorage.getItem('activeSelection');
+                if (savedSelection) {
+                    restoreActiveSelection();
+                } else {
+                    // Créer la sélection par défaut
+                    const validResidences = residences.filter(r => r.latitude && r.longitude);
+                    activeSelection = {
+                        id: 'all',
+                        name: 'Ensemble du patrimoine',
+                        residences: validResidences
+                    };
+                    filteredResidences = validResidences;
+                    updateSelectionButton();
+                    updateMap();
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+            }
+        }
+
+        // Ajouter la fonction de calcul des dépenses
+        function calculerDepensesTotales(residence) {
+            console.log('Calcul des dépenses pour la résidence:', residence.id);
+            
+            if (!window.globalChargesData) {
+                console.error('Données de charges non disponibles');
+                return { depenses: '0.00', evolution: '0' };
+            }
+
+            // Vérifier la structure des données de charges
+            console.log('Premier élément des charges:', window.globalChargesData[0]);
+            console.log('Type de Intent référence:', typeof window.globalChargesData[0]['Intent référence']);
+            console.log('Type de Année:', typeof window.globalChargesData[0]['Année']);
+
+            // Filtrer les charges pour cette résidence pour l'année 2025
+            const chargesResidence = window.globalChargesData.filter(charge => {
+                const intentRef = String(charge['Intent référence']);
+                const annee = Number(charge['Année']);
+                const match = intentRef === String(residence.id) && annee === 2025;
+                
+                if (match) {
+                    console.log('Charge trouvée:', charge);
+                }
+                
+                return match;
+            });
+
+            console.log('Nombre de charges trouvées:', chargesResidence.length);
+
+            let totalChargesReelles = 0;
+            let totalProvisions = 0;
+
+            // Calculer les totaux pour chaque catégorie
+            chargesResidence.forEach(charge => {
+                const montant = parseFloat(charge['Montant'] || 0);
+                if (!isNaN(montant)) {
+                    if (charge['Type'] === 'Valeur réelle') {
+                        totalChargesReelles += montant;
+                        console.log('Ajout charge réelle:', montant);
+                    } else if (charge['Type'] === 'Provision') {
+                        totalProvisions += montant;
+                        console.log('Ajout provision:', montant);
+                    }
+                }
+            });
+
+            console.log('Total charges réelles:', totalChargesReelles);
+            console.log('Total provisions:', totalProvisions);
+
+            const evolution = totalChargesReelles > 0 ? ((totalProvisions - totalChargesReelles) / totalChargesReelles) * 100 : 0;
+
+            return {
+                depenses: totalChargesReelles.toFixed(2),
+                evolution: evolution.toFixed(0)
+            };
+        }
+
+        function updateResidencesList() {
+            const listContainer = document.querySelector('.residences-list');
+            if (!listContainer) return;
+
+            const residencesToShow = filteredResidences.filter(r => r.latitude && r.longitude);
+            
+            listContainer.innerHTML = residencesToShow.map(residence => {
+                const depenses = calculerDepensesTotales(residence);
+                const evolutionClass = parseFloat(depenses.evolution) >= 0 ? 'positive' : 'negative';
+                const evolutionSymbol = parseFloat(depenses.evolution) >= 0 ? '+' : '';
+                
+                return `
+                    <div class="residence-list-item">
+                        <div class="residence-list-item-title">${residence.label || 'Sans nom'}</div>
+                        
+                        <div class="residence-list-item-tags">
+                            <span class="residence-list-item-tag">
+                                <span class="material-icons" style="font-size: 16px;">apartment</span>
+                                ${residence.nb_logements} logements
+                            </span>
+                            <span class="residence-list-item-tag">
+                                <span class="material-icons" style="font-size: 16px;">square_foot</span>
+                                ${Math.round(residence.surface_habitable)} m²
+                            </span>
+                        </div>
+                        
+                        <div class="residence-list-item-info">
+                            <span class="info-tag">
+                                <span class="material-icons">local_fire_department</span>
+                                ${residence.mode_production_chauffage || 'Non renseigné'}
+                            </span>
+                            <span class="info-tag">
+                                <span class="material-icons">water_drop</span>
+                                ${residence.mode_production_ecs || 'Non renseigné'}
+                            </span>
+                            <span class="info-tag tag-energy">
+                                <span class="material-icons">bolt</span>
+                                Chauffage: ${residence.nature_energie_chauffage || 'Non renseigné'}
+                            </span>
+                            <span class="info-tag tag-energy">
+                                <span class="material-icons">water</span>
+                                ECS: ${residence.nature_energie_ecs || 'Non renseigné'}
+                            </span>
+                            ${residence.lettre_dpe ? `
+                                <span class="info-tag tag-dpe">
+                                    <span class="material-icons">eco</span>
+                                    DPE: ${residence.lettre_dpe}
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="residence-list-item-expenses">
+                            <div class="expense-item">
+                                <span class="expense-label">Cumul des dépenses 2025</span>
+                                <span class="expense-value">${depenses.depenses} €</span>
+                            </div>
+                            <div class="expense-item">
+                                <span class="expense-label">Provision</span>
+                                <span class="expense-value ${evolutionClass}">${evolutionSymbol}${depenses.evolution}%</span>
+                            </div>
+                        </div>
+
+                        <button class="show-expenses-button" onclick="window.location.href='depenses.html'">
+                            Afficher les dépenses
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Ajouter les gestionnaires d'événements après avoir généré le HTML
+            const buttons = listContainer.querySelectorAll('.show-expenses-button');
+            buttons.forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    const residence = residencesToShow[index];
+                    localStorage.setItem('selectedResidences', JSON.stringify([residence]));
+                });
+            });
+        }
+
+        function centerOnResidence(residenceId) {
+            const residence = filteredResidences.find(r => r.id === residenceId);
+            if (residence && residence.latitude && residence.longitude) {
+                // Sauvegarder la résidence sélectionnée dans le localStorage
+                localStorage.setItem('selectedResidences', JSON.stringify([residence]));
+                
+                // Rediriger vers la page des dépenses
+                window.location.href = 'depenses.html';
+            }
+        }
+    </script>
+</body>
+</html> 
