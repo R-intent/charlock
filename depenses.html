@@ -77,11 +77,37 @@
         }
 
         .summary-card {
-            flex: 1;
             background: white;
-            padding: 32px;
-            border-radius: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #f8f9ff;
+        }
+
+        .summary-card .amount {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .summary-card:hover .amount {
+            color: var(--primary-color);
+        }
+
+        .summary-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
         }
 
         .summary-title {
@@ -330,7 +356,7 @@
             background-color: #f1f3f4;
         }
 
-        .ratio-filter input[type="checkbox"] {
+        .ratio-filter input[type="radio"] {
             width: 18px;
             height: 18px;
             margin: 0;
@@ -365,7 +391,7 @@
             </div>
 
             <div class="summary">
-                <div class="summary-card" style="cursor: pointer;" onclick="window.location.href='graphique.html'">
+                <div id="total-charges-card" class="summary-card" style="cursor: pointer;">
                     <div class="summary-title">Montant total des charges <span id="selected-year">2025</span></div>
                     <div class="summary-amount" id="total-charges">0 €</div>
                 </div>
@@ -404,8 +430,16 @@
             <div class="filter-section">
                 <div class="filter-section-title">Ratio des dépenses</div>
                 <div class="ratio-filter">
-                    <input type="checkbox" id="show-ratio" name="show-ratio">
-                    <label for="show-ratio">Dépenses par logement</label>
+                    <input type="radio" id="show-no-ratio" name="ratio-type" value="none" checked>
+                    <label for="show-no-ratio">Dépenses totales</label>
+                </div>
+                <div class="ratio-filter">
+                    <input type="radio" id="show-ratio-logement" name="ratio-type" value="logement">
+                    <label for="show-ratio-logement">Dépenses par logement</label>
+                </div>
+                <div class="ratio-filter">
+                    <input type="radio" id="show-ratio-m2" name="ratio-type" value="m2">
+                    <label for="show-ratio-m2">Dépenses par m² chauffés</label>
                 </div>
             </div>
         </div>
@@ -720,6 +754,13 @@
             try {
                 console.log('Chargement des données...');
                 
+                // Ajouter l'événement de redirection pour la carte des charges totales
+                const totalChargesCard = document.getElementById('total-charges-card');
+                totalChargesCard.addEventListener('click', () => {
+                    console.log('Click sur la carte des charges totales');
+                    window.location.href = 'graphique.html';
+                });
+
                 // Charger les données des résidences
                 const residencesResponse = await fetch('residences_data.json');
                 if (!residencesResponse.ok) {
@@ -748,10 +789,12 @@
                 const chargesData = await chargesResponse.json();
                 window.globalChargesData = chargesData;
 
-                // Ajouter l'event listener sur la case à cocher
-                document.getElementById('show-ratio').addEventListener('change', function() {
-                    console.log('Changement de ratio détecté:', this.checked);
-                    applyFilters();
+                // Ajouter les event listeners sur les boutons radio des ratios
+                document.querySelectorAll('input[name="ratio-type"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        console.log('Changement de ratio détecté:', this.value);
+                        applyFilters();
+                    });
                 });
 
                 // Ajouter les event listeners sur les boutons radio des années
@@ -773,10 +816,11 @@
         function loadDataForYear(year) {
             const chargesData = window.globalChargesData;
             const selectedResidences = window.selectedResidences;
-            const showRatio = document.getElementById('show-ratio').checked;
+            const ratioType = document.querySelector('input[name="ratio-type"]:checked').value;
 
             console.log('Chargement des données pour l\'année:', year);
             console.log('Nombre de résidences sélectionnées:', selectedResidences.length);
+            console.log('Type de ratio:', ratioType);
 
             // Initialiser les totaux globaux
             let globalTotalCharges = 0;
@@ -785,7 +829,7 @@
 
             // Traiter chaque résidence sélectionnée
             selectedResidences.forEach(selectedResidence => {
-                // Récupérer le nombre de logements pour cette résidence
+                // Récupérer les données de la résidence
                 const residenceData = window.residencesData.find(r => {
                     const selectedId = parseInt(selectedResidence.id);
                     const residenceId = parseInt(r.intent_reference);
@@ -793,6 +837,13 @@
                 });
 
                 const nbLogements = residenceData ? parseInt(residenceData["Nombre de logements de la résidence"]) : 1;
+                const surfaceChauffee = residenceData ? parseFloat(residenceData["Surface chauffée"]) || 1 : 1;
+
+                console.log(`Résidence ${selectedResidence.id}:`, {
+                    nbLogements,
+                    surfaceChauffee,
+                    residenceData
+                });
 
                 // Filtrer les charges pour la résidence courante et l'année spécifiée
                 const assetCharges = chargesData.filter(item => {
@@ -808,7 +859,8 @@
                             categorie: category,
                             valeur_reelle: 0,
                             provision: 0,
-                            nbLogements: 0
+                            nbLogements: nbLogements,
+                            surfaceChauffee: surfaceChauffee
                         };
                     }
                     
@@ -820,12 +872,11 @@
                         globalChargesByCategory[category].provision += montant;
                         globalTotalProvisions += montant;
                     }
-                    globalChargesByCategory[category].nbLogements += nbLogements;
                 });
             });
 
-            // Appliquer le ratio si nécessaire
-            if (showRatio) {
+            // Appliquer le ratio selon le type sélectionné
+            if (ratioType === 'logement') {
                 Object.values(globalChargesByCategory).forEach(category => {
                     if (category.nbLogements > 0) {
                         category.valeur_reelle = category.valeur_reelle / category.nbLogements;
@@ -833,12 +884,47 @@
                     }
                 });
                 
-                // Calculer les moyennes des totaux
+                // Calculer les moyennes des totaux par logement
                 const totalLogements = Object.values(globalChargesByCategory).reduce((sum, cat) => Math.max(sum, cat.nbLogements), 0);
                 if (totalLogements > 0) {
                     globalTotalCharges = globalTotalCharges / totalLogements;
                     globalTotalProvisions = globalTotalProvisions / totalLogements;
                 }
+            } else if (ratioType === 'm2') {
+                // Pour le debug, afficher les valeurs avant calcul
+                console.log('Avant calcul ratio m2:', {
+                    globalTotalCharges,
+                    globalTotalProvisions,
+                    categories: globalChargesByCategory
+                });
+
+                // Calculer la surface totale une seule fois
+                const totalSurface = selectedResidences.reduce((sum, residence) => {
+                    const residenceData = window.residencesData.find(r => 
+                        parseInt(r.intent_reference) === parseInt(residence.id)
+                    );
+                    const surface = residenceData ? parseFloat(residenceData["Surface chauffée"]) || 0 : 0;
+                    return sum + surface;
+                }, 0);
+
+                console.log('Surface totale:', totalSurface);
+
+                if (totalSurface > 0) {
+                    Object.values(globalChargesByCategory).forEach(category => {
+                        category.valeur_reelle = category.valeur_reelle / totalSurface;
+                        category.provision = category.provision / totalSurface;
+                    });
+                    
+                    globalTotalCharges = globalTotalCharges / totalSurface;
+                    globalTotalProvisions = globalTotalProvisions / totalSurface;
+                }
+
+                // Pour le debug, afficher les valeurs après calcul
+                console.log('Après calcul ratio m2:', {
+                    globalTotalCharges,
+                    globalTotalProvisions,
+                    categories: globalChargesByCategory
+                });
             }
 
             // Mettre à jour l'interface
@@ -874,6 +960,13 @@
 
                 const isHigher = category.valeur_reelle > category.provision;
                 
+                let ratioLabel = '';
+                if (ratioType === 'logement') {
+                    ratioLabel = ' par logement';
+                } else if (ratioType === 'm2') {
+                    ratioLabel = ' par m² chauffé';
+                }
+
                 expenseItem.innerHTML = `
                     <div class="expense-icon">
                         ${getCategoryIcon(category.categorie)}
@@ -882,13 +975,13 @@
                         <div class="expense-name">${category.categorie}</div>
                         <div class="expense-amounts">
                             <div class="amount-column">
-                                <div class="amount-label">Montant réel${showRatio ? '<span class="ratio"> par logement</span>' : ''}</div>
+                                <div class="amount-label">Montant réel${ratioLabel}</div>
                                 <div class="amount-value ${isHigher ? 'higher' : 'lower'}">
                                     ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(category.valeur_reelle)}
                                 </div>
                             </div>
                             <div class="amount-column">
-                                <div class="amount-label">Provision${showRatio ? '<span class="ratio"> par logement</span>' : ''}</div>
+                                <div class="amount-label">Provision${ratioLabel}</div>
                                 <div class="amount-value">
                                     ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(category.provision)}
                                 </div>
