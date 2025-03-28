@@ -309,13 +309,7 @@
             letter-spacing: 0.5px;
         }
 
-        .year-filter {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .year-option {
+        .year-filter, .ratio-filter {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -325,45 +319,18 @@
             transition: background-color 0.2s;
         }
 
-        .year-option:hover {
+        .year-filter:hover, .ratio-filter:hover {
             background-color: #f1f3f4;
         }
 
-        .year-option input[type="radio"] {
+        .year-filter input[type="radio"], .ratio-filter input[type="radio"] {
             width: 18px;
             height: 18px;
             margin: 0;
             cursor: pointer;
         }
 
-        .year-option label {
-            font-size: 16px;
-            color: #202124;
-            cursor: pointer;
-        }
-
-        .ratio-filter {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .ratio-filter:hover {
-            background-color: #f1f3f4;
-        }
-
-        .ratio-filter input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .ratio-filter label {
+        .year-filter label, .ratio-filter label {
             font-size: 16px;
             color: #202124;
             cursor: pointer;
@@ -371,6 +338,14 @@
 
         .amount-label.ratio {
             font-size: 13px;
+        }
+
+        .filters-container {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: fit-content;
         }
     </style>
 </head>
@@ -406,24 +381,20 @@
             </div>
         </div>
 
-        <div class="filter-panel">
-            <div class="filter-title">Filtres</div>
-            
+        <div class="filters-container">
             <div class="filter-section">
                 <div class="filter-section-title">Année</div>
                 <div class="year-filter">
-                    <div class="year-option">
-                        <input type="radio" id="year-2023" name="year" value="2023">
-                        <label for="year-2023">2023</label>
-                    </div>
-                    <div class="year-option">
-                        <input type="radio" id="year-2024" name="year" value="2024">
-                        <label for="year-2024">2024</label>
-                    </div>
-                    <div class="year-option">
-                        <input type="radio" id="year-2025" name="year" value="2025" checked>
-                        <label for="year-2025">2025</label>
-                    </div>
+                    <input type="radio" id="year-2023" name="year" value="2023">
+                    <label for="year-2023">2023</label>
+                </div>
+                <div class="year-filter">
+                    <input type="radio" id="year-2024" name="year" value="2024">
+                    <label for="year-2024">2024</label>
+                </div>
+                <div class="year-filter">
+                    <input type="radio" id="year-2025" name="year" value="2025" checked>
+                    <label for="year-2025">2025</label>
                 </div>
             </div>
 
@@ -877,54 +848,37 @@
 
             // Appliquer le ratio selon le type sélectionné
             if (ratioType === 'logement') {
-                Object.values(globalChargesByCategory).forEach(category => {
-                    if (category.nbLogements > 0) {
-                        category.valeur_reelle = category.valeur_reelle / category.nbLogements;
-                        category.provision = category.provision / category.nbLogements;
-                    }
-                });
-                
-                // Calculer les moyennes des totaux par logement
-                const totalLogements = Object.values(globalChargesByCategory).reduce((sum, cat) => Math.max(sum, cat.nbLogements), 0);
+                const totalLogements = selectedResidences.reduce((sum, residence) => {
+                    const residenceData = window.residencesData.find(r => 
+                        parseInt(r.intent_reference) === parseInt(residence.id)
+                    );
+                    return sum + (residenceData ? parseInt(residenceData["Nombre de logements de la résidence"]) || 0 : 0);
+                }, 0);
+
                 if (totalLogements > 0) {
+                    Object.values(globalChargesByCategory).forEach(category => {
+                        category.valeur_reelle = category.valeur_reelle / totalLogements;
+                        category.provision = category.provision / totalLogements;
+                    });
                     globalTotalCharges = globalTotalCharges / totalLogements;
                     globalTotalProvisions = globalTotalProvisions / totalLogements;
                 }
             } else if (ratioType === 'm2') {
-                // Pour le debug, afficher les valeurs avant calcul
-                console.log('Avant calcul ratio m2:', {
-                    globalTotalCharges,
-                    globalTotalProvisions,
-                    categories: globalChargesByCategory
-                });
-
-                // Calculer la surface totale une seule fois
                 const totalSurface = selectedResidences.reduce((sum, residence) => {
                     const residenceData = window.residencesData.find(r => 
                         parseInt(r.intent_reference) === parseInt(residence.id)
                     );
-                    const surface = residenceData ? parseFloat(residenceData["Surface chauffée"]) || 0 : 0;
-                    return sum + surface;
+                    return sum + (residenceData ? parseFloat(residenceData["Surface chauffée"]) || 0 : 0);
                 }, 0);
-
-                console.log('Surface totale:', totalSurface);
 
                 if (totalSurface > 0) {
                     Object.values(globalChargesByCategory).forEach(category => {
                         category.valeur_reelle = category.valeur_reelle / totalSurface;
                         category.provision = category.provision / totalSurface;
                     });
-                    
                     globalTotalCharges = globalTotalCharges / totalSurface;
                     globalTotalProvisions = globalTotalProvisions / totalSurface;
                 }
-
-                // Pour le debug, afficher les valeurs après calcul
-                console.log('Après calcul ratio m2:', {
-                    globalTotalCharges,
-                    globalTotalProvisions,
-                    categories: globalChargesByCategory
-                });
             }
 
             // Mettre à jour l'interface
