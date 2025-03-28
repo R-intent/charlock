@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évolution des charges - Charlock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --text-color: #333;
+            --border-color: #E5E7EB;
+            --background-color: #F9FAFB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .back-button:hover {
+            background: var(--background-color);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 24px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 24px;
+        }
+
+        #chargesChart {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button" onclick="window.location.href='depenses.html'">
+                <span class="material-icons">arrow_back</span>
+                Retour aux dépenses
+            </button>
+            <h1 id="asset-name"></h1>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="title">Évolution des charges et provisions</h2>
+            <canvas id="chargesChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Charger les données
+                const chargesResponse = await fetch('charlock_test_cursor_final_output_v7.json');
+                const chargesData = await chargesResponse.json();
+
+                // Récupérer la résidence sélectionnée depuis localStorage
+                const selectedResidences = JSON.parse(localStorage.getItem('selectedResidences')) || [];
+                const selectedResidence = selectedResidences[0];
+
+                if (!selectedResidence) {
+                    console.error('Aucune résidence sélectionnée');
+                    return;
+                }
+
+                // Mettre à jour le titre
+                document.getElementById('asset-name').textContent = selectedResidence.label;
+
+                // Préparer les données pour le graphique
+                const years = [2023, 2024, 2025];
+                const charges = [];
+                const provisions = [];
+
+                years.forEach(year => {
+                    const yearData = chargesData.filter(item => 
+                        String(parseInt(item["Intent référence"])) === String(parseInt(selectedResidence.id)) &&
+                        item["Année"] === year
+                    );
+
+                    const yearCharges = yearData
+                        .filter(item => item["Type"] === "Valeur réelle")
+                        .reduce((sum, item) => sum + (parseFloat(item["Montant"]) || 0), 0);
+
+                    const yearProvisions = yearData
+                        .filter(item => item["Type"] === "Provision")
+                        .reduce((sum, item) => sum + (parseFloat(item["Montant"]) || 0), 0);
+
+                    charges.push(yearCharges);
+                    provisions.push(yearProvisions);
+                });
+
+                // Créer le graphique
+                const ctx = document.getElementById('chargesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: years,
+                        datasets: [
+                            {
+                                label: 'Charges réelles',
+                                data: charges,
+                                backgroundColor: 'rgba(241, 91, 103, 0.7)',
+                                borderColor: 'rgba(241, 91, 103, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Provisions',
+                                data: provisions,
+                                backgroundColor: 'rgba(140, 198, 63, 0.7)',
+                                borderColor: 'rgba(140, 198, 63, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('fr-FR', {
+                                            style: 'currency',
+                                            currency: 'EUR'
+                                        }).format(value);
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + 
+                                            new Intl.NumberFormat('fr-FR', {
+                                                style: 'currency',
+                                                currency: 'EUR'
+                                            }).format(context.raw);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        });
+    </script>
+</body>
+</html> 
