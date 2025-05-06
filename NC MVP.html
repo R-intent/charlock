@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntentDATA Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f7;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #111;
+        }
+
+        .beta-tag {
+            background: #00d2ff;
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .search-bar {
+            margin-left: auto;
+            margin-right: 1rem;
+            position: relative;
+        }
+
+        .search-bar input {
+            padding: 0.6rem 2.2rem;
+            width: 320px;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            background: #f8f8f8;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #00d2ff;
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .user-icon {
+            width: 36px;
+            height: 36px;
+            background: #f5f5f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-icon:hover {
+            background: #e8e8e8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button.active {
+            background: #007AFF;
+            color: white;
+            border: none;
+        }
+
+        .filter-button.info {
+            background: white;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .filter-button.info.active {
+            background: #007AFF;
+            color: white;
+            border: none;
+        }
+
+        .action-button {
+            background: white;
+            color: #666;
+            border: 1px solid #e0e0e0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:not(.show-all) {
+            background: white;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .action-button:not(.show-all).active {
+            background: #007AFF;
+            color: white;
+            border: none;
+        }
+
+        .action-button.show-all {
+            background: #00d2ff;
+            border: none;
+            color: white;
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            width: 100%;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .bar {
+            width: 60px;
+            background: #00d2ff;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bar.combined {
+            background: linear-gradient(135deg, #007AFF, #00d2ff);
+        }
+
+        .bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #666;
+            white-space: nowrap;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .bar:hover::after {
+            opacity: 1;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.95));
+            overflow: hidden;
+        }
+
+        .building-list {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .building-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem 0;
+            position: relative;
+        }
+
+        .building-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            color: #007AFF;
+            font-size: 1rem;
+        }
+
+        .building-info {
+            flex-grow: 1;
+            font-size: 0.9rem;
+        }
+
+        .building-title {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .building-rank {
+            color: #007AFF;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .site-modal {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: white;
+            border-radius: 12px;
+            padding: 1.2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .site-modal.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-100%);
+        }
+
+        .site-modal::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            transform: rotate(45deg);
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.1);
+            z-index: -1;
+        }
+
+        .modal-title {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-consumption {
+            font-size: 1.8rem;
+            color: #007AFF;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .modal-unit {
+            font-size: 0.9rem;
+            color: #007AFF;
+            font-weight: normal;
+        }
+
+        .modal-date {
+            background: #E5F7FF;
+            color: #333;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 0.5rem 0;
+            display: inline-block;
+        }
+
+        .modal-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #e0e0e0 transparent;
+            width: 100%;
+            position: relative;
+            cursor: grab;
+        }
+
+        .modal-tags:active {
+            cursor: grabbing;
+        }
+
+        .modal-tags::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+
+        .modal-tags::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 2px;
+        }
+
+        .modal-tags::-webkit-scrollbar-thumb {
+            background-color: #e0e0e0;
+            border-radius: 2px;
+        }
+
+        .modal-tag {
+            background: #f5f5f7;
+            border: 1px solid #e0e0e0;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .modal-tag-icon {
+            color: #007AFF;
+            font-size: 0.9rem;
+        }
+
+        .building-address {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .consumption-bar-container {
+            position: relative;
+        }
+
+        .consumption-bar {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 0.3rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Couleurs pour les plus consommateurs */
+        .high-consumption .consumption-bar {
+            background: #ff69b4;
+        }
+
+        /* Couleurs pour les moins consommateurs */
+        .low-consumption .consumption-bar {
+            background: #90EE90;
+        }
+
+        .consumption-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            right: 0;
+            bottom: -1.2rem;
+            font-size: 0.75rem;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .performance-indicator {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 1rem;
+        }
+
+        .performance-indicator.up {
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .performance-indicator.neutral {
+            border: 1px solid #FF9800;
+            color: #FF9800;
+        }
+
+        .performance-indicator.up::before {
+            content: '↗';
+            margin-right: 4px;
+        }
+
+        .performance-indicator.neutral::before {
+            content: '=';
+            margin-right: 4px;
+        }
+
+        .metric-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            max-width: 300px;
+            text-align: center;
+            z-index: 10;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            pointer-events: none;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 200px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 20;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #333;
+        }
+
+        .dropdown-item:hover {
+            background: #f5f5f7;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .selected {
+            background: #f5f5f7;
+            font-weight: 500;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.03); }
+        }
+
+        .metric-button-container {
+            display: flex;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .metric-indicator {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #666;
+            background: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .action-button:hover + .metric-indicator {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .chart-legend {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .chart-legend.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-color.dju {
+            background: #00d2ff;
+        }
+
+        .legend-color.kwh {
+            background: #007AFF;
+        }
+
+        .legend-color.combined {
+            background: linear-gradient(135deg, #007AFF, #00d2ff);
+        }
+
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f5f5f7;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        .modal-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-options {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .view-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .view-button.active {
+            background: #f5f5f7;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .filter-group {
+            display: none;
+            gap: 0.5rem;
+            margin-left: 2rem;
+        }
+
+        .filter-group.show {
+            display: flex;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .filter-button.info {
+            background: #007AFF;
+            color: white;
+            border: none;
+        }
+
+        .modal-content {
+            flex-grow: 1;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .scatter-plot {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            height: calc(100vh - 180px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .scatter-container {
+            position: relative;
+            flex-grow: 1;
+            margin: 40px;
+            margin-bottom: 60px;
+        }
+
+        .axis {
+            position: absolute;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .x-axis {
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 1px;
+        }
+
+        .y-axis {
+            left: 0;
+            bottom: 0;
+            width: 1px;
+            height: 100%;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: #f5f5f7;
+            z-index: 0;
+        }
+
+        .grid-line.horizontal {
+            width: 100%;
+            height: 1px;
+            left: 0;
+        }
+
+        .grid-line.vertical {
+            height: 100%;
+            width: 1px;
+            bottom: 0;
+        }
+
+        .axis-value {
+            position: absolute;
+            color: #666;
+            font-size: 0.75rem;
+            z-index: 2;
+        }
+
+        .y-axis-label {
+            position: absolute;
+            left: -2.5rem;
+            top: 50%;
+            transform: rotate(-90deg) translateX(50%);
+            transform-origin: left;
+            color: #666;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .x-axis-label {
+            position: absolute;
+            bottom: -3rem;
+            right: 0;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .data-point {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 3;
+        }
+
+        .data-point.high {
+            background: rgba(255, 192, 203, 0.6);
+            border: 1px solid rgba(255, 182, 193, 0.8);
+        }
+
+        .data-point.low {
+            background: rgba(144, 238, 144, 0.6);
+            border: 1px solid rgba(152, 251, 152, 0.8);
+        }
+
+        .data-point.normal {
+            border: 1px solid rgba(220, 220, 220, 0.6);
+        }
+
+        .plot-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem;
+            margin-top: auto;
+            border-top: 1px solid #f5f5f7;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.high {
+            background: rgba(255, 192, 203, 0.6);
+            border: 1px solid #ffb6c1;
+        }
+
+        .legend-dot.low {
+            background: rgba(144, 238, 144, 0.6);
+            border: 1px solid #98FB98;
+        }
+
+        .legend-dot.size {
+            background: rgba(220, 220, 220, 0.4);
+            border: 1px solid #e0e0e0;
+        }
+
+        .fullscreen-modal .building-list {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            height: calc(100vh - 180px);
+            display: none;
+        }
+
+        .fullscreen-modal .building-list.active {
+            display: block;
+        }
+
+        .fullscreen-modal .building-list-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .fullscreen-modal .building-list-section {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            height: 100%;
+        }
+
+        .fullscreen-modal .section-title {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        .fullscreen-modal .section-content {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 0.5rem;
+            margin-right: -0.5rem;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar-track {
+            background: #f5f5f7;
+            border-radius: 2px;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar-thumb {
+            background: #e0e0e0;
+            border-radius: 2px;
+        }
+
+        .fullscreen-modal .building-list-section {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 280px);
+            overflow: hidden;
+        }
+
+        .fullscreen-modal .section-content {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 1rem;
+            margin-right: -1rem;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar-track {
+            background: #f5f5f7;
+            border-radius: 3px;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar-thumb {
+            background: #e0e0e0;
+            border-radius: 3px;
+        }
+
+        .fullscreen-modal .section-content::-webkit-scrollbar-thumb:hover {
+            background: #d0d0d0;
+        }
+
+        .fullscreen-modal .site-modal {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 240px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .fullscreen-modal .site-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fullscreen-modal .site-modal::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: white;
+            transform: rotate(45deg);
+            box-shadow: -2px -2px 4px rgba(0,0,0,0.05);
+        }
+
+        .fullscreen-modal .modal-title {
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .fullscreen-modal .modal-consumption {
+            font-size: 1.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .fullscreen-modal .modal-unit {
+            font-size: 0.8rem;
+        }
+
+        .fullscreen-modal .modal-date {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            margin: 0.4rem 0;
+        }
+
+        .fullscreen-modal .modal-tag {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .fullscreen-modal .building-rank {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            color: #007AFF;
+            font-size: 0.85rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .quartile-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            left: 0;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .quartile-line.q1 {
+            border-top: 2px dashed #007AFF;
+        }
+
+        .quartile-line.q3 {
+            border-top: 2px dashed #00d2ff;
+        }
+
+        .quartile-line.median {
+            background: #666;
+            height: 2px;
+        }
+
+        .quartile-line.show {
+            opacity: 1;
+        }
+
+        .quartile-label {
+            position: absolute;
+            right: -60px;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: #666;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .filter-button.active {
+            background: #f5f5f7;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Ajout des styles pour la modale dans le nuage de points */
+        .scatter-plot .site-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 240px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .scatter-plot .site-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scatter-plot .modal-title {
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .scatter-plot .modal-consumption {
+            font-size: 1.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .scatter-plot .modal-unit {
+            font-size: 0.8rem;
+        }
+
+        .scatter-plot .modal-date {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            margin: 0.4rem 0;
+        }
+
+        .scatter-plot .modal-tag {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .site-details {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #f5f5f7;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .site-details.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .site-details-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 1rem;
+        }
+
+        .site-details-title {
+            font-size: 1rem;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .site-details-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .site-details-main-title {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .site-details-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .period-button {
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            background: white;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .period-button.active {
+            background: #007AFF;
+            color: white;
+        }
+
+        .options-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .filter-button .icon {
+            color: #007AFF;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .consumption-graph {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .graph-navigation {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+        }
+
+        .nav-button {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #333;
+            cursor: pointer;
+            padding: 1rem;
+        }
+
+        .modal-details-button {
+            width: 100%;
+            padding: 0.5rem;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-details-button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            IntentDATA
+            <span class="beta-tag">Beta</span>
+        </div>
+        <div class="search-bar">
+            <span class="search-icon">��</span>
+            <input type="text" placeholder="rechercher un bâtiment">
+        </div>
+        <div class="user-icon">👤</div>
+    </nav>
+
+    <div class="main-content">
+        <div class="dashboard-card">
+            <h2>Classement des sites les plus consommateurs en chauffage collectif en 2025</h2>
+            <div class="filters">
+                <div class="dropdown">
+                    <button class="filter-button" id="consumptionFilter">
+                        les plus consommateurs ▼
+                    </button>
+                    <div class="dropdown-content" id="consumptionDropdown">
+                        <div class="dropdown-item selected" data-value="high">les plus consommateurs</div>
+                        <div class="dropdown-item" data-value="low">les moins consommateurs</div>
+                    </div>
+                </div>
+                <button class="filter-button">
+                    depuis début 2025 📝
+                </button>
+                <button class="action-button metric-button" id="djuButton">DJU</button>
+                <button class="action-button metric-button" id="kwhButton">kwh/m²</button>
+            </div>
+
+            <div class="building-list" id="buildingList">
+                <!-- High consumption buildings -->
+                <div class="building-list-content high-consumption" id="highConsumption">
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">top 1</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="85" data-kwh="180" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator up">+2</span>
+                    </div>
+
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">top 2</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="65" data-kwh="150" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator neutral">=0</span>
+                    </div>
+
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">top 3</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="95" data-kwh="200" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator up">+2</span>
+                    </div>
+                </div>
+
+                <!-- Low consumption buildings (hidden by default) -->
+                <div class="building-list-content low-consumption" id="lowConsumption" style="display: none;">
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">flop 1</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="45" data-kwh="80" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator up">+2</span>
+                    </div>
+
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">flop 2</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="35" data-kwh="60" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator neutral">=0</span>
+                    </div>
+
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">flop 3</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">7 536,37 <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" data-dju="25" data-kwh="50" style="width: 25%"></div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator up">+2</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="action-button show-all" style="margin-top: 1rem; width: 100%" onclick="openFullscreenModal()">
+                afficher tous les bâtiments
+            </button>
+
+            <!-- Modale plein écran -->
+            <div class="fullscreen-modal" id="fullscreenModal">
+                <div class="modal-header">
+                    <button class="modal-close" onclick="closeFullscreenModal()">✕</button>
+                    <h1 class="modal-title">Mon périmètre par défaut - 78 bâtiments</h1>
+                    <p class="modal-subtitle">Nuage de points des consommations de chauffage collectif de l'ensemble des bâtiments, toutes énergies confondues</p>
+                    <div class="modal-options">
+                        <button class="view-button active">
+                            <span>✨</span>
+                            graphique de données
+                        </button>
+                        <button class="view-button">
+                            <span>📊</span>
+                            classement des bâtiments
+                        </button>
+                        <div class="filter-group show">
+                            <button class="filter-button">
+                                année en cours (à partir de janv) ▼
+                            </button>
+                            <button class="filter-button">
+                                Q1 ℹ️
+                            </button>
+                            <button class="filter-button">
+                                Q3 ℹ️
+                            </button>
+                            <button class="filter-button">
+                                médiane des consommations ℹ️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-content">
+                    <div class="scatter-plot">
+                        <div class="scatter-container" id="scatterContainer">
+                            <!-- Les points seront ajoutés dynamiquement -->
+                        </div>
+                        <div class="plot-legend">
+                            <div class="legend-item">
+                                <div class="legend-dot high"></div>
+                                <span>sites les plus énergivores</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot low"></div>
+                                <span>sites les plus performants</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot size"></div>
+                                <span>taille des cercles : surface des sites</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="building-list">
+                        <!-- Le contenu sera généré dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="chart-container">
+                <div class="bar-chart" id="barChart">
+                    <div class="bar" data-dju="85" data-kwh="180" style="height: 80%"></div>
+                    <div class="bar" data-dju="65" data-kwh="150" style="height: 60%"></div>
+                    <div class="bar" data-dju="95" data-kwh="200" style="height: 90%"></div>
+                    <div class="bar" data-dju="75" data-kwh="170" style="height: 70%"></div>
+                </div>
+                <div class="chart-tooltip">
+                    Multipliez cet indicateur en cliquant sur ⋮<br>
+                    afin d'étudier et comparer de nouveaux périmètres.
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-legend" id="chartLegend">
+                    <div class="legend-item">
+                        <div class="legend-color dju"></div>
+                        <span>DJU</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color kwh"></div>
+                        <span>kWh/m²</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color combined"></div>
+                        <span>Combiné</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const consumptionFilter = document.getElementById('consumptionFilter');
+            const dropdown = document.getElementById('consumptionDropdown');
+            const highConsumption = document.getElementById('highConsumption');
+            const lowConsumption = document.getElementById('lowConsumption');
+            const djuButton = document.getElementById('djuButton');
+            const kwhButton = document.getElementById('kwhButton');
+            let activeModal = null;
+
+            // Gestionnaire de clic pour les rangs des bâtiments
+            document.querySelectorAll('.building-rank').forEach(rank => {
+                rank.addEventListener('click', function(e) {
+                    const modal = this.closest('.building-title').querySelector('.site-modal');
+                    
+                    // Si une autre modale est active, la fermer
+                    if (activeModal && activeModal !== modal) {
+                        activeModal.classList.remove('active');
+                    }
+                    
+                    // Basculer l'état de la modale courante
+                    modal.classList.toggle('active');
+                    activeModal = modal.classList.contains('active') ? modal : null;
+                });
+            });
+
+            // Fermer la modale en cliquant en dehors
+            document.addEventListener('click', function(e) {
+                if (activeModal && !e.target.closest('.building-rank') && !activeModal.contains(e.target)) {
+                    activeModal.classList.remove('active');
+                    activeModal = null;
+                }
+            });
+
+            let currentMode = 'high';
+            let activatedMetrics = new Set();
+
+            function getUnitText() {
+                if (activatedMetrics.size === 0) {
+                    return 'KWH';
+                } else if (activatedMetrics.size === 2) {
+                    return 'KWH/M²/DJU';
+                } else if (activatedMetrics.has('dju')) {
+                    return 'KWH DJU';
+                } else {
+                    return 'KWH/M²';
+                }
+            }
+
+            function updateConsumptionBars() {
+                const currentList = currentMode === 'high' ? highConsumption : lowConsumption;
+                const bars = currentList.querySelectorAll('.consumption-bar');
+                
+                bars.forEach((bar) => {
+                    let value;
+                    if (activatedMetrics.size === 0) {
+                        value = bar.dataset.kwh;
+                    } else if (activatedMetrics.size === 2) {
+                        value = (parseFloat(bar.dataset.dju) + parseFloat(bar.dataset.kwh)) / 2;
+                    } else {
+                        const metric = activatedMetrics.has('dju') ? 'dju' : 'kwh';
+                        value = bar.dataset[metric];
+                    }
+                    
+                    const unit = getUnitText();
+                    bar.setAttribute('data-value', `${value}k ${unit}`);
+                });
+            }
+
+            function toggleMetricButton(button, metric) {
+                if (button.classList.contains('active')) {
+                    button.classList.remove('active');
+                    activatedMetrics.delete(metric);
+                } else {
+                    button.classList.add('active');
+                    activatedMetrics.add(metric);
+                }
+                updateConsumptionBars();
+            }
+
+            // Toggle dropdown
+            consumptionFilter.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+            });
+
+            // Handle dropdown item selection
+            dropdown.addEventListener('click', function(e) {
+                if (e.target.classList.contains('dropdown-item')) {
+                    const value = e.target.dataset.value;
+                    const text = e.target.textContent;
+
+                    currentMode = value;
+                    consumptionFilter.textContent = text + ' ▼';
+
+                    dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    e.target.classList.add('selected');
+
+                    if (value === 'high') {
+                        highConsumption.style.display = 'block';
+                        lowConsumption.style.display = 'none';
+                    } else {
+                        highConsumption.style.display = 'none';
+                        lowConsumption.style.display = 'block';
+                    }
+
+                    updateConsumptionBars();
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // Metric button click handlers
+            djuButton.addEventListener('click', () => toggleMetricButton(djuButton, 'dju'));
+            kwhButton.addEventListener('click', () => toggleMetricButton(kwhButton, 'kwh'));
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                dropdown.classList.remove('show');
+            });
+
+            // Initial update
+            updateConsumptionBars();
+
+            // Gestion du défilement horizontal avec la souris
+            document.querySelectorAll('.modal-tags').forEach(container => {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                container.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    container.style.cursor = 'grabbing';
+                    startX = e.pageX - container.offsetLeft;
+                    scrollLeft = container.scrollLeft;
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    container.style.cursor = 'grab';
+                });
+
+                container.addEventListener('mouseup', () => {
+                    isDown = false;
+                    container.style.cursor = 'grab';
+                });
+
+                container.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - container.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    container.scrollLeft = scrollLeft - walk;
+                });
+
+                // Gestion du défilement horizontal avec le tactile
+                container.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].pageX - container.offsetLeft;
+                    scrollLeft = container.scrollLeft;
+                });
+
+                container.addEventListener('touchmove', (e) => {
+                    if (!startX) return;
+                    e.preventDefault();
+                    const x = e.touches[0].pageX - container.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    container.scrollLeft = scrollLeft - walk;
+                });
+
+                container.addEventListener('touchend', () => {
+                    startX = null;
+                });
+            });
+
+            // Fonctions pour la modale plein écran
+            window.openFullscreenModal = function() {
+                const modal = document.getElementById('fullscreenModal');
+                modal.classList.add('active');
+                initializeScatterPlot();
+            }
+
+            window.closeFullscreenModal = function() {
+                const modal = document.getElementById('fullscreenModal');
+                modal.classList.remove('active');
+            }
+
+            function initializeScatterPlot() {
+                const container = document.getElementById('scatterContainer');
+                container.innerHTML = '';
+                
+                // Paramètres du graphique
+                const maxX = 900000; // 900k kWh
+                const maxY = 130; // 130 kWh/m²
+                const gridLines = 10;
+
+                // Ajout des axes
+                const xAxis = document.createElement('div');
+                xAxis.className = 'axis x-axis';
+                container.appendChild(xAxis);
+
+                const yAxis = document.createElement('div');
+                yAxis.className = 'axis y-axis';
+                container.appendChild(yAxis);
+
+                // Ajout des labels des axes
+                const yAxisLabel = document.createElement('div');
+                yAxisLabel.className = 'y-axis-label';
+                yAxisLabel.textContent = 'consommation en kwh/m2';
+                container.appendChild(yAxisLabel);
+
+                const xAxisLabel = document.createElement('div');
+                xAxisLabel.className = 'x-axis-label';
+                xAxisLabel.textContent = 'consommations corrigées KWh';
+                container.appendChild(xAxisLabel);
+
+                // Création de la grille et des graduations
+                for (let i = 0; i <= gridLines; i++) {
+                    // Lignes horizontales et valeurs Y
+                    if (i % 2 === 0) {
+                        const horizontalLine = document.createElement('div');
+                        horizontalLine.className = 'grid-line horizontal';
+                        horizontalLine.style.bottom = `${(i / gridLines) * 100}%`;
+                        container.appendChild(horizontalLine);
+
+                        const yValue = document.createElement('div');
+                        yValue.className = 'axis-value';
+                        yValue.textContent = Math.round(maxY * (i / gridLines));
+                        yValue.style.left = '-2rem';
+                        yValue.style.bottom = `${(i / gridLines) * 100}%`;
+                        container.appendChild(yValue);
+                    }
+
+                    // Lignes verticales et valeurs X
+                    if (i % 2 === 0) {
+                        const verticalLine = document.createElement('div');
+                        verticalLine.className = 'grid-line vertical';
+                        verticalLine.style.left = `${(i / gridLines) * 100}%`;
+                        container.appendChild(verticalLine);
+
+                        const xValue = document.createElement('div');
+                        xValue.className = 'axis-value';
+                        xValue.textContent = `${Math.round(maxX * (i / gridLines) / 1000)}k`;
+                        xValue.style.bottom = '-2rem';
+                        xValue.style.left = `${(i / gridLines) * 100}%`;
+                        container.appendChild(xValue);
+                    }
+                }
+
+                // Ajout des lignes de quartiles
+                const q1Value = maxY * 0.25;
+                const q3Value = maxY * 0.75;
+                const medianValue = maxY * 0.5;
+
+                const q1Line = document.createElement('div');
+                q1Line.className = 'quartile-line q1';
+                q1Line.style.bottom = `${(q1Value / maxY) * 100}%`;
+                const q1Label = document.createElement('div');
+                q1Label.className = 'quartile-label';
+                q1Label.textContent = 'Q1';
+                q1Line.appendChild(q1Label);
+                container.appendChild(q1Line);
+
+                const q3Line = document.createElement('div');
+                q3Line.className = 'quartile-line q3';
+                q3Line.style.bottom = `${(q3Value / maxY) * 100}%`;
+                const q3Label = document.createElement('div');
+                q3Label.className = 'quartile-label';
+                q3Label.textContent = 'Q3';
+                q3Line.appendChild(q3Label);
+                container.appendChild(q3Line);
+
+                const medianLine = document.createElement('div');
+                medianLine.className = 'quartile-line median';
+                medianLine.style.bottom = `${(medianValue / maxY) * 100}%`;
+                const medianLabel = document.createElement('div');
+                medianLabel.className = 'quartile-label';
+                medianLabel.textContent = 'Médiane';
+                medianLine.appendChild(medianLabel);
+                container.appendChild(medianLine);
+
+                // Génération des données
+                const data = [];
+                
+                // Points normaux (environ 45 points)
+                for (let i = 0; i < 45; i++) {
+                    data.push({
+                        x: Math.random() * maxX * 0.8 + maxX * 0.1,
+                        y: Math.random() * maxY * 0.8 + maxY * 0.1,
+                        size: Math.random() * 20 + 30,
+                        type: 'normal'
+                    });
+                }
+
+                // Points énergivores (3 points)
+                for (let i = 0; i < 3; i++) {
+                    data.push({
+                        x: maxX * (1.1 + Math.random() * 0.2),
+                        y: maxY * (1.1 + Math.random() * 0.2),
+                        size: Math.random() * 20 + 40,
+                        type: 'high'
+                    });
+                }
+
+                // Points performants (3 points)
+                for (let i = 0; i < 3; i++) {
+                    data.push({
+                        x: maxX * Math.random() * 0.1,
+                        y: maxY * Math.random() * 0.1,
+                        size: Math.random() * 20 + 40,
+                        type: 'low'
+                    });
+                }
+
+                // Création des points avec gradient de couleur
+                data.forEach(point => {
+                    const dot = document.createElement('div');
+                    dot.className = `data-point ${point.type}`;
+                    
+                    // Calcul de la position relative (0 à 1)
+                    const relativeX = point.x / maxX;
+                    const relativeY = point.y / maxY;
+                    
+                    // Application du gradient de couleur
+                    if (point.type === 'normal') {
+                        const ratio = (relativeX + relativeY) / 2;
+                        const r = Math.round(144 + (255 - 144) * ratio);
+                        const g = Math.round(238 + (182 - 238) * ratio);
+                        const b = Math.round(144 + (193 - 144) * ratio);
+                        dot.style.background = `rgba(${r}, ${g}, ${b}, 0.6)`;
+                        dot.style.border = `1px solid rgba(${r}, ${g}, ${b}, 0.8)`;
+                    }
+                    
+                    dot.style.left = `${relativeX * 100}%`;
+                    dot.style.bottom = `${relativeY * 100}%`;
+                    dot.style.width = `${point.size}px`;
+                    dot.style.height = `${point.size}px`;
+
+                    // Ajout de la modale pour chaque point
+                    const modal = document.createElement('div');
+                    modal.className = 'site-modal';
+                    modal.innerHTML = `
+                        <div class="modal-title">${generateRandomBuildingName()}</div>
+                        <div class="modal-consumption">${Math.round(point.x)} <span class="modal-unit">kwh en mars 2024</span></div>
+                        <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                        <div class="modal-tags">
+                            <div class="modal-tag">
+                                <span class="modal-tag-icon">📍</span>
+                                Code collaborateur:VPN
+                            </div>
+                            <div class="modal-tag">
+                                <span class="modal-tag-icon">🏢</span>
+                                code_collaborateur:FM
+                            </div>
+                        </div>
+                        <button class="modal-details-button">voir plus</button>
+                    `;
+                    dot.appendChild(modal);
+
+                    // Gestionnaire de clic pour afficher/masquer la modale
+                    dot.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const allModals = container.querySelectorAll('.site-modal');
+                        allModals.forEach(m => {
+                            if (m !== modal) {
+                                m.classList.remove('active');
+                            }
+                        });
+                        modal.classList.toggle('active');
+                    });
+
+                    // Gestionnaire pour le bouton "voir plus"
+                    const detailsButton = modal.querySelector('.modal-details-button');
+                    detailsButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        showSiteDetails({
+                            x: point.x,
+                            y: point.y,
+                            type: point.type,
+                            name: modal.querySelector('.modal-title').textContent
+                        });
+                    });
+
+                    container.appendChild(dot);
+                });
+
+                // Fermer toutes les modales en cliquant en dehors
+                container.addEventListener('click', function() {
+                    const allModals = container.querySelectorAll('.site-modal');
+                    allModals.forEach(modal => modal.classList.remove('active'));
+                });
+
+                // Mise à jour de la légende
+                const plotLegend = document.querySelector('.plot-legend');
+                plotLegend.innerHTML = `
+                    <div class="legend-item">
+                        <div class="legend-dot high"></div>
+                        <span>sites les plus énergivores</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot low"></div>
+                        <span>sites les plus performants</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot size"></div>
+                        <span>taille des cercles : surface des sites</span>
+                    </div>
+                `;
+            }
+
+            const viewButtons = document.querySelectorAll('.view-button');
+            const scatterPlot = document.querySelector('.scatter-plot');
+            const buildingList = document.querySelector('.fullscreen-modal .building-list');
+
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    viewButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const filterGroup = document.querySelector('.filter-group');
+
+                    if (this.textContent.includes('graphique')) {
+                        scatterPlot.style.display = 'flex';
+                        buildingList.style.display = 'none';
+                        filterGroup.classList.add('show');
+                        initializeScatterPlot();
+                    } else {
+                        scatterPlot.style.display = 'none';
+                        buildingList.style.display = 'block';
+                        filterGroup.classList.remove('show');
+                        initializeFullscreenList();
+                    }
+                });
+            });
+
+            // Gestion des boutons de quartiles
+            const quartileButtons = document.querySelectorAll('.filter-button');
+            quartileButtons.forEach(button => {
+                if (button.textContent.includes('Q1') || 
+                    button.textContent.includes('Q3') || 
+                    button.textContent.includes('médiane')) {
+                    
+                    button.addEventListener('click', function() {
+                        this.classList.toggle('active');
+                        const type = this.textContent.toLowerCase().includes('q1') ? 'q1' : 
+                                   this.textContent.toLowerCase().includes('q3') ? 'q3' : 'median';
+                        
+                        if (this.classList.contains('active')) {
+                            this.style.background = '#007AFF';
+                            this.style.color = 'white';
+                            this.style.border = 'none';
+                        } else {
+                            this.style.background = 'white';
+                            this.style.color = '#666';
+                            this.style.border = '1px solid #e0e0e0';
+                        }
+                        
+                        const line = document.querySelector(`.quartile-line.${type}`);
+                        if (line) {
+                            line.classList.toggle('show');
+                        }
+                    });
+                }
+            });
+
+            // Ajout du gestionnaire pour le bouton "voir plus"
+            const detailsButtons = document.querySelectorAll('.modal-details-button');
+            detailsButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    showSiteDetails(point);
+                });
+            });
+        });
+
+        function initializeFullscreenList() {
+            const container = document.querySelector('.fullscreen-modal .building-list');
+            container.innerHTML = `
+                <div class="building-list-content">
+                    <div class="building-list-section">
+                        <h3 class="section-title">Top 20 sites les plus consommateurs</h3>
+                        <div class="section-content">
+                            ${generateBuildingItems(20, 'high')}
+                        </div>
+                    </div>
+                    <div class="building-list-section">
+                        <h3 class="section-title">Top 20 sites les moins consommateurs</h3>
+                        <div class="section-content">
+                            ${generateBuildingItems(20, 'low')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Ajouter les gestionnaires d'événements pour les modales
+            const buildingRanks = container.querySelectorAll('.building-rank');
+            buildingRanks.forEach(rank => {
+                rank.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const modal = this.closest('.building-title').querySelector('.site-modal');
+                    
+                    // Fermer toute autre modale active
+                    const activeModals = container.querySelectorAll('.site-modal.active');
+                    activeModals.forEach(activeModal => {
+                        if (activeModal !== modal) {
+                            activeModal.classList.remove('active');
+                        }
+                    });
+                    
+                    // Basculer l'état de la modale courante
+                    modal.classList.toggle('active');
+                });
+            });
+
+            // Fermer la modale en cliquant en dehors
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.building-rank')) {
+                    const activeModals = container.querySelectorAll('.site-modal.active');
+                    activeModals.forEach(modal => modal.classList.remove('active'));
+                }
+            });
+        }
+
+        function generateBuildingItems(count, type) {
+            let items = '';
+            const prefix = type === 'high' ? 'top' : 'flop';
+            const barColor = type === 'high' ? '#ff69b4' : '#90EE90';
+            
+            for (let i = 1; i <= count; i++) {
+                const randomValue = type === 'high' ? 
+                    Math.floor(Math.random() * (200 - 150) + 150) :
+                    Math.floor(Math.random() * (80 - 30) + 30);
+                    
+                const width = type === 'high' ? 
+                    Math.floor(Math.random() * (90 - 70) + 70) :
+                    Math.floor(Math.random() * (40 - 20) + 20);
+
+                items += `
+                    <div class="building-item">
+                        <div class="building-icon">🏢</div>
+                        <div class="building-info">
+                            <div class="building-title">
+                                <span class="building-rank">${prefix} ${i}</span>
+                                52275002 - MARCHE SAINT HONORE
+                                <div class="site-modal">
+                                    <div class="modal-title">consommation en chauffage collectif</div>
+                                    <div class="modal-consumption">${randomValue * 37.68} <span class="modal-unit">kwh en mars 2024</span></div>
+                                    <div class="modal-date">dernière donnée reçu le 15 mars</div>
+                                    <div class="modal-tags">
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">📍</span>
+                                            Code collaborateur:VPN
+                                        </div>
+                                        <div class="modal-tag">
+                                            <span class="modal-tag-icon">🏢</span>
+                                            code_collaborateur:FM
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="building-address">7 RUE LEON JOUHAUX, 31500 TOULOUSE</div>
+                            <div class="consumption-bar-container">
+                                <div class="consumption-bar" 
+                                     data-dju="${randomValue - 20}" 
+                                     data-kwh="${randomValue}"
+                                     style="width: ${width}%; background: ${barColor}">
+                                </div>
+                            </div>
+                        </div>
+                        <span class="performance-indicator ${Math.random() > 0.5 ? 'up' : 'neutral'}">
+                            ${Math.random() > 0.5 ? '+2' : '=0'}
+                        </span>
+                    </div>
+                `;
+            }
+            return items;
+        }
+
+        // Fonction pour générer un nom de bâtiment aléatoire
+        function generateRandomBuildingName() {
+            const buildings = [
+                'Résidence Square Chêne',
+                'Résidence Les Peupliers',
+                'Résidence Les Ormes',
+                'Résidence Le Parc'
+            ];
+            return buildings[Math.floor(Math.random() * buildings.length)];
+        }
+
+        // Fonction pour afficher les détails du site
+        function showSiteDetails(point) {
+            const siteDetails = document.createElement('div');
+            siteDetails.className = 'site-details';
+            siteDetails.innerHTML = `
+                <div class="site-details-header">
+                    <button class="back-button">←</button>
+                    <div class="site-details-title">${point.name}</div>
+                    <button class="modal-close">✕</button>
+                </div>
+                <div class="site-details-content">
+                    <div>
+                        <h1 class="site-details-main-title">Consommation de chauffage collectif en 2025</h1>
+                        <p class="site-details-subtitle">On analyse la consommation de chauffage pour cette résidence sur l'année 2025.</p>
+                    </div>
+                    
+                    <div class="options-row">
+                        <div class="period-selector">
+                            <button class="period-button active">mois</button>
+                            <button class="period-button">jour</button>
+                            <button class="period-button">année</button>
+                        </div>
+                        
+                        <div class="filters">
+                            <button class="filter-button">
+                                correction DJU
+                                <span class="icon">▼</span>
+                            </button>
+                            <button class="filter-button">
+                                analyse en kWh/m²
+                                <span class="icon">▼</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="compareBuildings">
+                            <label class="toggle-label" for="compareBuildings">Comparer avec d'autres bâtiments</label>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="showComposite">
+                            <label class="toggle-label" for="showComposite">afficher les flux composites</label>
+                        </div>
+                    </div>
+
+                    <div class="consumption-graph">
+                        <div class="graph-navigation">
+                            <button class="nav-button prev">←</button>
+                            <button class="nav-button next">→</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(siteDetails);
+            
+            // Animation d'entrée
+            setTimeout(() => siteDetails.classList.add('active'), 10);
+
+            // Gestionnaire pour les boutons de fermeture
+            const backButton = siteDetails.querySelector('.back-button');
+            const closeButton = siteDetails.querySelector('.modal-close');
+            const closeModal = () => {
+                siteDetails.classList.remove('active');
+                setTimeout(() => siteDetails.remove(), 300);
+            };
+
+            backButton.addEventListener('click', closeModal);
+            closeButton.addEventListener('click', closeModal);
+
+            // Initialisation du graphique
+            initializeConsumptionGraph(siteDetails.querySelector('.consumption-graph'));
+        }
+
+        // Fonction pour initialiser le graphique de consommation
+        function initializeConsumptionGraph(container) {
+            const months = ['juin 2024', 'juillet 2024', 'août 2024', 'sept 2024', 'octobre 2024', 
+                           'novem 2024', 'décembre 2024', 'janvier 2025', 'février 2025'];
+            const values = months.map(() => Math.random() * 8000 + 2000);
+
+            const barChart = document.createElement('div');
+            barChart.className = 'bar-chart';
+            barChart.style.height = '300px';
+            barChart.style.display = 'flex';
+            barChart.style.alignItems = 'flex-end';
+            barChart.style.gap = '1rem';
+            barChart.style.padding = '1rem';
+
+            months.forEach((month, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'consumption-bar';
+                bar.style.flex = '1';
+                bar.style.height = `${(values[i] / 10000) * 100}%`;
+                bar.style.background = '#00d2ff';
+                bar.style.borderRadius = '6px 6px 0 0';
+                bar.style.position = 'relative';
+
+                const label = document.createElement('div');
+                label.style.position = 'absolute';
+                label.style.bottom = '-2rem';
+                label.style.left = '50%';
+                label.style.transform = 'translateX(-50%)';
+                label.style.fontSize = '0.8rem';
+                label.style.color = '#666';
+                label.style.whiteSpace = 'nowrap';
+                label.textContent = month;
+
+                const value = document.createElement('div');
+                value.style.position = 'absolute';
+                value.style.top = '-2rem';
+                value.style.left = '50%';
+                value.style.transform = 'translateX(-50%)';
+                value.style.fontSize = '0.8rem';
+                value.style.color = '#666';
+                value.textContent = `${Math.round(values[i])} kWh`;
+
+                bar.appendChild(label);
+                bar.appendChild(value);
+                barChart.appendChild(bar);
+            });
+
+            container.appendChild(barChart);
+        }
+    </script>
+</body>
+</html> 
