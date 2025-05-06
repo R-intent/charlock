@@ -1325,17 +1325,6 @@
                     <div class="filter-group-header">
                         <div class="filter-group-title">
                             <span class="material-icons">expand_more</span>
-                            Mode de production ECS
-                        </div>
-                        <span class="filter-count">3</span>
-                    </div>
-                    <div class="filter-list" data-filter="mode_production_ecs"></div>
-                </div>
-
-                <div class="filter-group">
-                    <div class="filter-group-header">
-                        <div class="filter-group-title">
-                            <span class="material-icons">expand_more</span>
                             Nature de l'énergie chauffage
                         </div>
                         <span class="filter-count">3</span>
@@ -1358,44 +1347,11 @@
                     <div class="filter-group-header">
                         <div class="filter-group-title">
                             <span class="material-icons">expand_more</span>
-                            Postes de charges
-                        </div>
-                        <span class="filter-count">6</span>
-                    </div>
-                    <div class="filter-list" data-filter="postes_charges"></div>
-                </div>
-
-                <div class="filter-group">
-                    <div class="filter-group-header">
-                        <div class="filter-group-title">
-                            <span class="material-icons">expand_more</span>
                             DPE
                         </div>
                         <span class="filter-count">5</span>
                     </div>
                     <div class="filter-list" data-filter="lettre_dpe"></div>
-                </div>
-
-                <div class="filter-group">
-                    <div class="filter-group-header">
-                        <div class="filter-group-title">
-                            <span class="material-icons">expand_more</span>
-                            Copropriété
-                        </div>
-                        <span class="filter-count">2</span>
-                    </div>
-                    <div class="filter-list" data-filter="copropriete"></div>
-                </div>
-
-                <div class="filter-group">
-                    <div class="filter-group-header">
-                        <div class="filter-group-title">
-                            <span class="material-icons">expand_more</span>
-                            Dernières réhabilitation
-                        </div>
-                        <span class="filter-count">4</span>
-                    </div>
-                    <div class="filter-list" data-filter="derniere_rehabilitation"></div>
                 </div>
             </div>
         </div>
@@ -1455,13 +1411,9 @@
         let activeFilters = {
             annee_construction: [],
             mode_production_chauffage: [],
-            mode_production_ecs: [],
             nature_energie_chauffage: [],
             nature_energie_ecs: [],
-            postes_charges: [],
-            lettre_dpe: [],
-            copropriete: [],
-            derniere_rehabilitation: []
+            lettre_dpe: []
         };
         let activeSelection = null;
 
@@ -1550,12 +1502,8 @@
                             ${residence.mode_production_chauffage || 'Individuel'}
                         </div>
                         <div class="popup-tag">
-                            <span class="material-icons">water_drop</span>
-                            ${residence.mode_production_ecs || 'SOL'}
-                        </div>
-                        <div class="popup-tag">
                             <span class="material-icons">power</span>
-                            ${residence.nature_energie_chauffage || 'GN'}
+                            ${getEnergyLabel(residence.nature_energie_chauffage) || 'GN'}
                         </div>
                     </div>
 
@@ -1855,11 +1803,6 @@
                     label: "Mode de production chauffage",
                     dataField: "mode_production_chauffage"
                 },
-                mode_production_ecs: {
-                    key: "mode_production_ecs",
-                    label: "Mode de production ECS",
-                    dataField: "mode_production_ecs"
-                },
                 nature_energie_chauffage: {
                     key: "nature_energie_chauffage",
                     label: "Nature de l'énergie chauffage",
@@ -1874,11 +1817,6 @@
                     key: "lettre_dpe",
                     label: "DPE",
                     dataField: "lettre_dpe"
-                },
-                derniere_rehabilitation: {
-                    key: "derniere_rehabilitation",
-                    label: "Dernière réhabilitation",
-                    dataField: "derniere_rehabilitation"
                 }
             };
 
@@ -1909,9 +1847,13 @@
                     const count = valueCounts.get(value);
                     const item = document.createElement('div');
                     item.className = 'filter-item';
+                    let displayValue = value;
+                    if (filterType.key === 'nature_energie_chauffage' || filterType.key === 'nature_energie_ecs') {
+                        displayValue = getEnergyLabel(value);
+                    }
                     item.innerHTML = `
                         <input type="checkbox" id="${filterType.key}-${value}">
-                        <label for="${filterType.key}-${value}">${value}</label>
+                        <label for="${filterType.key}-${value}">${displayValue}</label>
                         <span class="filter-count">${String(count).padStart(2, '0')}</span>
                     `;
 
@@ -1937,6 +1879,7 @@
                 // Mettre à jour le compteur du groupe
                 const headerCount = filterList.closest('.filter-group').querySelector('.filter-count');
                 if (headerCount) {
+                    // Le total doit être la somme des valeurs individuelles (renseignées)
                     const totalCount = Array.from(valueCounts.values()).reduce((sum, count) => sum + count, 0);
                     headerCount.textContent = String(totalCount).padStart(2, '0');
                 }
@@ -2045,11 +1988,9 @@
             const filterTypes = {
                 annee_construction: "Date de construction",
                 mode_production_chauffage: "Mode de production chauffage",
-                mode_production_ecs: "Mode de production ECS",
                 nature_energie_chauffage: "Nature de l'énergie chauffage",
                 nature_energie_ecs: "Nature de l'énergie ECS",
-                lettre_dpe: "DPE",
-                derniere_rehabilitation: "Dernière réhabilitation"
+                lettre_dpe: "DPE"
             };
 
             // Ne considérer que les résidences avec des coordonnées valides
@@ -2412,11 +2353,9 @@
             const filterTypes = {
                 annee_construction: "Date de construction",
                 mode_production_chauffage: "Mode de production chauffage",
-                mode_production_ecs: "Mode de production ECS",
                 nature_energie_chauffage: "Nature de l'énergie chauffage",
                 nature_energie_ecs: "Nature de l'énergie ECS",
-                lettre_dpe: "DPE",
-                derniere_rehabilitation: "Dernière réhabilitation"
+                lettre_dpe: "DPE"
             };
 
             Object.keys(filterTypes).forEach(filterKey => {
@@ -2529,27 +2468,28 @@
                 }
                 
                 // Transformer les données des résidences
-                residences = rawData.map(residence => {
-                    const lat = residence.intent_latitude ? parseFloat(String(residence.intent_latitude).replace(',', '.')) : null;
-                    const lng = residence.intent_longitude ? parseFloat(String(residence.intent_longitude).replace(',', '.')) : null;
-                    
-                    return {
-                        id: residence.intent_reference,
-                        label: residence.label,
-                        adresse: `${residence.intent_address_way || ''}, ${residence.intent_address_zip || ''} ${residence.intent_address_city || ''}`.trim(),
-                        latitude: lat,
-                        longitude: lng,
-                        nb_logements: parseInt(residence["Nombre de logements de la résidence"]) || 0,
-                        surface_habitable: parseFloat(String(residence["Surface habitable totale de la résidence"]).replace(',', '.')) || 0,
-                        annee_construction: residence["Année de construction"],
-                        mode_production_chauffage: residence["Modalité de production de chauffage"],
-                        mode_production_ecs: residence["Modalité de production ECS"],
-                        nature_energie_chauffage: residence["Nature de l'énergie chauffage"],
-                        nature_energie_ecs: residence["Nature de l'énergie ECS"],
-                        lettre_dpe: residence["Lettre DPE"],
-                        derniere_rehabilitation: residence["Dernière réhabilitation"]
-                    };
-                });
+                residences = rawData
+                    .filter(residence => residence.label !== "FONTAINE PL LEGION D'HONNEUR")
+                    .map(residence => {
+                        const lat = residence.intent_latitude ? parseFloat(String(residence.intent_latitude).replace(',', '.')) : null;
+                        const lng = residence.intent_longitude ? parseFloat(String(residence.intent_longitude).replace(',', '.')) : null;
+                        return {
+                            id: residence.intent_reference,
+                            label: residence.label,
+                            adresse: `${residence.intent_address_way || ''}, ${residence.intent_address_zip || ''} ${residence.intent_address_city || ''}`.trim(),
+                            latitude: lat,
+                            longitude: lng,
+                            nb_logements: parseInt(residence["Nombre de logements de la résidence"]) || 0,
+                            surface_habitable: parseFloat(String(residence["Surface habitable totale de la résidence"]).replace(',', '.')) || 0,
+                            annee_construction: residence["Année de construction"],
+                            mode_production_chauffage: residence["Modalité de production de chauffage"],
+                            mode_production_ecs: residence["Modalité de production ECS"],
+                            nature_energie_chauffage: residence["Nature de l'énergie chauffage"],
+                            nature_energie_ecs: residence["Nature de l'énergie ECS"],
+                            lettre_dpe: residence["Lettre DPE"],
+                            derniere_rehabilitation: residence["Dernière réhabilitation"]
+                        };
+                    });
 
                 // Examiner la structure des résidences
                 if (residences.length > 0) {
@@ -2669,17 +2609,13 @@
                                 <span class="material-icons">local_fire_department</span>
                                 ${residence.mode_production_chauffage || 'Non renseigné'}
                             </span>
-                            <span class="info-tag">
-                                <span class="material-icons">water_drop</span>
-                                ${residence.mode_production_ecs || 'Non renseigné'}
-                            </span>
                             <span class="info-tag tag-energy">
                                 <span class="material-icons">bolt</span>
-                                Chauffage: ${residence.nature_energie_chauffage || 'Non renseigné'}
+                                Chauffage: ${getEnergyLabel(residence.nature_energie_chauffage) || 'Non renseigné'}
                             </span>
                             <span class="info-tag tag-energy">
                                 <span class="material-icons">water</span>
-                                ECS: ${residence.nature_energie_ecs || 'Non renseigné'}
+                                ECS: ${getEnergyLabel(residence.nature_energie_ecs) || 'Non renseigné'}
                             </span>
                             ${residence.lettre_dpe ? `
                                 <span class="info-tag tag-dpe">
@@ -2727,6 +2663,27 @@
                 // Rediriger vers la page des dépenses
                 window.location.href = 'depenses.html';
             }
+        }
+
+        // Ajouter la fonction de correspondance des labels juste avant l'initialisation des filtres :
+        function getEnergyLabel(code) {
+            const labels = {
+                AUT: 'Autre',
+                BOIS: 'Bois',
+                CH: 'Chauffage urbain',
+                COGE: 'Cogénération',
+                ELEC: 'Électricité',
+                FL: 'Fioul lourd',
+                FOD: 'Fioul domestique',
+                GEO: 'Géothermie',
+                GN: 'Gaz naturel',
+                GPL: 'Gaz de pétrole liquéfié',
+                MIX: 'Énergie mixte',
+                SANS: 'Sans objet',
+                SOL: 'Solaire',
+                UIOM: "Unité d'incinération des ordures ménagères."
+            };
+            return labels[code] || code;
         }
     </script>
 </body>
