@@ -153,6 +153,9 @@
             border-radius: 12px;
             font-size: 12px;
             color: #374151;
+            min-width: 28px;
+            text-align: center;
+            display: inline-block;
         }
 
         .filter-list {
@@ -1261,6 +1264,124 @@
             font-size: 20px;
             color: #6B7280;
         }
+
+        #floating-menu .floating-menu-btn.active {
+            background: #EFF6FF;
+            color: #2563EB;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+        }
+
+        #floating-menu .floating-menu-btn {
+            background: none;
+            color: #374151;
+        }
+
+        #floating-menu .floating-menu-btn:last-child.active {
+            background: #FFF0F0;
+            color: #c00;
+            box-shadow: 0 2px 8px rgba(220,38,38,0.08);
+        }
+
+        /* Nouveau style moderne pour le menu flottant */
+        .floating-menu-modern {
+            position: absolute;
+            top: 50%;
+            left: 32px;
+            transform: translateY(-50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+            padding: 18px 10px;
+            align-items: stretch;
+            min-width: 120px;
+        }
+        .floating-menu-modern .floating-menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            background: none;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            color: #374151;
+            transition: background 0.2s, color 0.2s;
+            outline: none;
+        }
+        .floating-menu-modern .floating-menu-btn .material-icons {
+            font-size: 22px;
+            transition: color 0.2s;
+        }
+        .floating-menu-modern .floating-menu-btn.active {
+            background: #EFF6FF;
+            color: #2563EB;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+        }
+        .floating-menu-modern .floating-menu-btn.active .material-icons {
+            color: #2563EB;
+        }
+        .floating-menu-modern .floating-menu-btn:last-child.active {
+            background: #FFF0F0;
+            color: #c00;
+            box-shadow: 0 2px 8px rgba(220,38,38,0.08);
+        }
+        .floating-menu-modern .floating-menu-btn:last-child.active .material-icons {
+            color: #c00;
+        }
+        .floating-menu-modern .floating-menu-btn:hover:not(.active) {
+            background: #F3F4F6;
+        }
+
+        /* Couleurs personnalisées pour les clusters (ordre inversé) */
+        .marker-cluster-small {
+            background: #10B981 !important;
+            border: 2px solid #fff !important;
+        }
+        .marker-cluster-small div {
+            background: #10B981 !important;
+        }
+        .marker-cluster-medium {
+            background: #FBBF24 !important;
+            border: 2px solid #fff !important;
+        }
+        .marker-cluster-medium div {
+            background: #FBBF24 !important;
+        }
+        .marker-cluster-large {
+            background: #EF4444 !important;
+            border: 2px solid #fff !important;
+        }
+        .marker-cluster-large div {
+            background: #EF4444 !important;
+        }
+        /* Centrage parfait des chiffres dans les clusters */
+        .marker-cluster {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .marker-cluster span {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            pointer-events: none;
+        }
     </style>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -1269,6 +1390,17 @@
 </head>
 <body>
     <div class="container">
+        <!-- Nouveau menu flottant moderne à gauche -->
+        <div id="floating-menu" class="floating-menu-modern">
+            <button id="menu-patrimoine" class="floating-menu-btn active">
+                <span class="material-icons">home</span>
+                Patrimoine
+            </button>
+            <button id="menu-alertes" class="floating-menu-btn">
+                <span class="material-icons">warning</span>
+                Alertes
+            </button>
+        </div>
         <div id="map"></div>
         
         <div class="top-bar">
@@ -1292,7 +1424,6 @@
                     <span class="material-icons">refresh</span>
                 </button>
             </div>
-
             <div class="search-bar">
                 <span class="material-icons">search</span>
                 <input type="text" placeholder="ville, rue, résidence...">
@@ -1416,6 +1547,11 @@
             lettre_dpe: []
         };
         let activeSelection = null;
+        // Variables globales pour le mode favori
+        let modeFavoriActif = false;
+        let currentFavoriteResidences = null;
+        // Variable globale pour le mode alertes
+        let modeAlertes = false;
 
         // Fonction globale pour afficher les dépenses
         window.showExpenses = function(residenceId) {
@@ -1479,6 +1615,7 @@
             popupContent.innerHTML = `
                 <div class="popup-header">
                     <h3 class="popup-title">${residence.label || ''}</h3>
+                    ${residence.alerte ? '<span title="Alerte : consommation supérieure à la provision" style="color:#c00;font-size:22px;margin-left:8px;vertical-align:middle;">⚠️</span>' : ''}
                     <button class="popup-favorite">
                         <span class="material-icons">favorite_border</span>
                     </button>
@@ -1767,16 +1904,24 @@
 
         // Application des filtres
         function applyFilters() {
-            // Ne filtrer que parmi les résidences avec des coordonnées valides
-            filteredResidences = residences
+            let base;
+            if (modeFavoriActif && currentFavoriteResidences) {
+                base = currentFavoriteResidences;
+            } else {
+                base = residences;
+            }
+            filteredResidences = base
                 .filter(residence => residence.latitude && residence.longitude)
                 .filter(residence => {
+                    if (modeAlertes && !residence.alerte) return false;
                     return Object.entries(activeFilters).every(([key, values]) => {
                         if (values.length === 0) return true;
+                        if (key === 'nature_energie_chauffage' || key === 'nature_energie_ecs') {
+                            return values.map(v => v.toUpperCase()).includes((residence[key] || '').toUpperCase());
+                        }
                         return values.includes(residence[key]);
                     });
                 });
-
             updateMap();
             updateUI();
             updateFilterCounts();
@@ -1820,31 +1965,52 @@
                 }
             };
 
-            // Ne considérer que les résidences avec des coordonnées valides
-            const validResidences = residences.filter(r => r.latitude && r.longitude);
+            // Correction : base de calcul = filteredResidences (celles affichées sur la carte)
+            let baseResidences = filteredResidences.filter(r => r.latitude && r.longitude);
+
+            // Définir les valeurs complètes pour chaque filtre
+            const allEnergyCodes = [
+                'AUT', 'BOIS', 'CH', 'COGE', 'ELEC', 'FL', 'FOD', 'GEO', 'GN', 'GPL', 'MIX', 'SANS', 'SOL', 'UIOM'
+            ];
 
             Object.values(filterTypes).forEach(filterType => {
                 const filterList = document.querySelector(`[data-filter="${filterType.key}"]`);
                 if (!filterList) return;
 
-                // Vider la liste existante
-                filterList.innerHTML = '';
+                // DEBUG : log pour diagnostic
+                console.log('--- Calcul des compteurs pour', filterType.key, '---');
+                console.log('baseResidences', baseResidences);
+                console.log('Clé de filtre', filterType.key);
+                baseResidences.forEach(r => console.log('Valeur:', r[filterType.key]));
 
-                // Obtenir les valeurs uniques et leur compte
+                // Calcul des compteurs sur la base des résidences affichées
                 const valueCounts = new Map();
-                validResidences.forEach(residence => {
-                    const value = residence[filterType.dataField];
+                baseResidences.forEach(residence => {
+                    let value = residence[filterType.key];
+                    if ((filterType.key === 'nature_energie_chauffage' || filterType.key === 'nature_energie_ecs') && value) {
+                        value = value.toUpperCase();
+                    }
                     if (value) {
                         valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
                     }
                 });
 
-                // Trier les valeurs
-                const sortedValues = Array.from(valueCounts.keys()).sort((a, b) => String(a).localeCompare(String(b)));
+                // Liste complète des valeurs possibles pour ce filtre
+                let allValues;
+                if (filterType.key === 'nature_energie_chauffage' || filterType.key === 'nature_energie_ecs') {
+                    allValues = allEnergyCodes;
+                } else {
+                    allValues = Array.from(new Set(residences.map(r => r[filterType.key]).filter(Boolean)));
+                }
+                const sortedValues = allValues.slice().sort((a, b) => String(a).localeCompare(String(b)));
 
-                // Créer les éléments de filtre
+                filterList.innerHTML = '';
                 sortedValues.forEach(value => {
-                    const count = valueCounts.get(value);
+                    let countValue = value;
+                    if (filterType.key === 'nature_energie_chauffage' || filterType.key === 'nature_energie_ecs') {
+                        countValue = value.toUpperCase();
+                    }
+                    const count = (valueCounts.has(countValue) ? valueCounts.get(countValue) : 0);
                     const item = document.createElement('div');
                     item.className = 'filter-item';
                     let displayValue = value;
@@ -1858,6 +2024,22 @@
                     `;
 
                     const checkbox = item.querySelector('input');
+                    const isSelected = activeFilters[filterType.key] && activeFilters[filterType.key].includes(value);
+                    if (count === 0 && !isSelected) {
+                        checkbox.disabled = true;
+                        checkbox.checked = false;
+                        if (activeFilters[filterType.key]) {
+                            const idx = activeFilters[filterType.key].indexOf(value);
+                            if (idx !== -1) {
+                                activeFilters[filterType.key].splice(idx, 1);
+                            }
+                        }
+                    } else {
+                        if (isSelected) {
+                            checkbox.checked = true;
+                        }
+                    }
+
                     checkbox.addEventListener('change', () => {
                         if (checkbox.checked) {
                             if (!activeFilters[filterType.key]) {
@@ -1871,6 +2053,7 @@
                             }
                         }
                         applyFilters();
+                        initializeFilters();
                     });
 
                     filterList.appendChild(item);
@@ -1879,7 +2062,6 @@
                 // Mettre à jour le compteur du groupe
                 const headerCount = filterList.closest('.filter-group').querySelector('.filter-count');
                 if (headerCount) {
-                    // Le total doit être la somme des valeurs individuelles (renseignées)
                     const totalCount = Array.from(valueCounts.values()).reduce((sum, count) => sum + count, 0);
                     headerCount.textContent = String(totalCount).padStart(2, '0');
                 }
@@ -1982,6 +2164,36 @@
                     window.location.href = 'depenses.html';
                 });
             }
+
+            // Gestion du menu flottant à gauche
+            const menuPatrimoine = document.getElementById('menu-patrimoine');
+            const menuAlertes = document.getElementById('menu-alertes');
+            if (menuPatrimoine && menuAlertes) {
+                menuPatrimoine.addEventListener('click', () => {
+                    modeAlertes = false;
+                    menuPatrimoine.classList.add('active');
+                    menuAlertes.classList.remove('active');
+                    // Si un favori est actif, on garde currentFavoriteResidences, sinon on repasse sur tout le patrimoine
+                    if (!modeFavoriActif) {
+                        resetFilters();
+                        filteredResidences = residences.filter(r => r.latitude && r.longitude);
+                    }
+                    applyFilters();
+                    initializeFilters();
+                });
+                menuAlertes.addEventListener('click', () => {
+                    modeAlertes = true;
+                    menuPatrimoine.classList.remove('active');
+                    menuAlertes.classList.add('active');
+                    // Si un favori est actif, on garde currentFavoriteResidences, sinon on filtre sur les alertes du patrimoine
+                    if (!modeFavoriActif) {
+                        resetFilters();
+                        filteredResidences = residences.filter(r => r.latitude && r.longitude && r.alerte);
+                    }
+                    applyFilters();
+                    initializeFilters();
+                });
+            }
         });
 
         function updateFilterCounts() {
@@ -2055,7 +2267,7 @@
                     return;
                 }
 
-                const marker = L.marker([residence.latitude, residence.longitude]);
+                const marker = L.marker([residence.latitude, residence.longitude], { icon: getCustomMarker(residence) });
                 const popupContent = createPopupContent(residence);
                 
                 const popup = L.popup({
@@ -2107,10 +2319,18 @@
 
             try {
                 let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                // Sauvegarder la version complète de chaque résidence
+                const completeResidences = visibleResidences.map(r => {
+                    const full = residences.find(fullR => fullR.id === r.id);
+                    return full ? { ...full } : { ...r };
+                });
+                // Log de vérification
+                console.log('Résidences sauvegardées dans le favori:', completeResidences.map(r => ({ id: r.id, nature_energie_chauffage: r.nature_energie_chauffage, nature_energie_ecs: r.nature_energie_ecs })));
                 const newFavorite = {
                     id: Date.now(),
                     name: name,
-                    residences: visibleResidences,
+                    residences: completeResidences,
+                    filters: JSON.parse(JSON.stringify(activeFilters)), // Sauvegarde des filtres actifs
                     date: new Date().toISOString()
                 };
                 
@@ -2121,6 +2341,9 @@
                 console.log('Favori sauvegardé avec succès');
                 updateFavoritesList();
                 
+                // Charger automatiquement le favori nouvellement créé
+                loadFavorite(newFavorite.id);
+
                 setTimeout(() => {
                     closeFavoritesModal();
                 }, 300);
@@ -2157,48 +2380,117 @@
             }
         }
 
+        function restoreActiveSelection() {
+            const savedSelection = localStorage.getItem('activeSelection');
+            if (savedSelection) {
+                try {
+                    const selection = JSON.parse(savedSelection);
+                    console.log('Restauration de la sélection:', selection.name);
+
+                    if (selection.id === 'all') {
+                        // Charger l'ensemble du patrimoine
+                        const validResidences = residences.filter(r => r.latitude && r.longitude);
+                        activeSelection = {
+                            id: 'all',
+                            name: 'Ensemble du patrimoine',
+                            residences: validResidences
+                        };
+                        filteredResidences = validResidences;
+                    } else {
+                        // Charger une sélection spécifique
+                        activeSelection = selection;
+                        filteredResidences = selection.residences;
+                        // Restaurer les filtres actifs
+                        if (selection.filters) {
+                            Object.keys(activeFilters).forEach(key => {
+                                if (key === 'nature_energie_chauffage' || key === 'nature_energie_ecs') {
+                                    activeFilters[key] = Array.isArray(selection.filters[key]) ? selection.filters[key].map(v => v.toUpperCase()) : [];
+                                } else {
+                                    activeFilters[key] = Array.isArray(selection.filters[key]) ? [...selection.filters[key]] : [];
+                                }
+                            });
+                            // Cocher les cases dans l'UI
+                            setTimeout(() => {
+                                Object.entries(activeFilters).forEach(([key, values]) => {
+                                    values.forEach(value => {
+                                        let checkboxId = key === 'nature_energie_chauffage' || key === 'nature_energie_ecs' ? `${key}-${value.toUpperCase()}` : `${key}-${value}`;
+                                        const checkbox = document.getElementById(checkboxId);
+                                        if (checkbox) checkbox.checked = true;
+                                    });
+                                });
+                            }, 0);
+                        }
+                    }
+                    updateSelectionButton();
+                    if (selection.id !== 'all') updateFiltersForSelection(filteredResidences);
+                    applyFilters();
+                    initializeFilters();
+                } catch (error) {
+                    console.error('Erreur lors de la restauration de la sélection:', error);
+                }
+            }
+        }
+
+        // Correction aussi lors du chargement d'un favori
         function loadFavorite(id) {
             console.log('Chargement du favori:', id);
-            
-            // Réinitialiser les filtres avant de charger la nouvelle sélection
-            resetFilters();
-            
             if (id === 'all') {
-                // Charger l'ensemble du patrimoine (uniquement les résidences avec coordonnées valides)
-                const validResidences = residences.filter(r => r.latitude && r.longitude);
+                resetFilters();
+                modeFavoriActif = false;
+                currentFavoriteResidences = null;
+                let validResidences;
+                if (modeAlertes) {
+                    validResidences = residences.filter(r => r.latitude && r.longitude && r.alerte);
+                } else {
+                    validResidences = residences.filter(r => r.latitude && r.longitude);
+                }
                 activeSelection = {
                     id: 'all',
                     name: 'Ensemble du patrimoine',
                     residences: validResidences
                 };
                 filteredResidences = validResidences;
+                applyFilters();
+                initializeFilters();
             } else {
-                // Charger un favori spécifique
                 const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
                 const favorite = favorites.find(f => f.id === id);
-                
                 if (favorite && favorite.residences && favorite.residences.length > 0) {
                     activeSelection = favorite;
                     filteredResidences = favorite.residences;
+                    modeFavoriActif = true;
+                    currentFavoriteResidences = favorite.residences;
+                    // Restauration des filtres actifs du favori
+                    if (favorite.filters) {
+                        Object.keys(activeFilters).forEach(key => {
+                            if (key === 'nature_energie_chauffage' || key === 'nature_energie_ecs') {
+                                activeFilters[key] = Array.isArray(favorite.filters[key]) ? favorite.filters[key].map(v => v.toUpperCase()) : [];
+                            } else {
+                                activeFilters[key] = Array.isArray(favorite.filters[key]) ? [...favorite.filters[key]] : [];
+                            }
+                        });
+                        // Cocher les cases dans l'UI
+                        setTimeout(() => {
+                            Object.entries(activeFilters).forEach(([key, values]) => {
+                                values.forEach(value => {
+                                    let checkboxId = key === 'nature_energie_chauffage' || key === 'nature_energie_ecs' ? `${key}-${value.toUpperCase()}` : `${key}-${value}`;
+                                    const checkbox = document.getElementById(checkboxId);
+                                    if (checkbox) checkbox.checked = true;
+                                });
+                            });
+                        }, 0);
+                    }
                 } else {
                     console.error('Favori non trouvé ou sans résidences');
                     return;
                 }
             }
-            
-            // Mettre à jour l'interface
             updateSelectionButton();
-            updateMap();
-            updateUI();
-            
-            // Mettre à jour les filtres pour la nouvelle sélection
-            updateFiltersForSelection(filteredResidences);
-            
-            // Sauvegarder la sélection active
+            if (id !== 'all') updateFiltersForSelection(filteredResidences);
+            applyFilters();
+            initializeFilters();
             saveActiveSelection();
-            
             closeFavoritesModal();
-            
             console.log('Sélection chargée:', activeSelection.name);
         }
 
@@ -2432,9 +2724,8 @@
                     
                     // Mettre à jour l'interface
                     updateSelectionButton();
-                    updateMap();
-                    updateUI();
                     updateFiltersForSelection(filteredResidences);
+                    applyFilters();
                 } catch (error) {
                     console.error('Erreur lors de la restauration de la sélection:', error);
                 }
@@ -2473,6 +2764,16 @@
                     .map(residence => {
                         const lat = residence.intent_latitude ? parseFloat(String(residence.intent_latitude).replace(',', '.')) : null;
                         const lng = residence.intent_longitude ? parseFloat(String(residence.intent_longitude).replace(',', '.')) : null;
+                        // Correction : calcul de l'alerte ici
+                        const id = String(residence.intent_reference);
+                        const charges2025 = window.globalChargesData.filter(charge => String(charge['Intent référence']) === id && charge['Année'] === 2025);
+                        let totalReelle = 0, totalProvision = 0;
+                        charges2025.forEach(charge => {
+                            const montant = parseFloat(charge['Montant'] || 0);
+                            if (charge['Type'] === 'Valeur réelle') totalReelle += montant;
+                            if (charge['Type'] === 'Provision') totalProvision += montant;
+                        });
+                        const alerte = totalReelle > totalProvision;
                         return {
                             id: residence.intent_reference,
                             label: residence.label,
@@ -2484,10 +2785,11 @@
                             annee_construction: residence["Année de construction"],
                             mode_production_chauffage: residence["Modalité de production de chauffage"],
                             mode_production_ecs: residence["Modalité de production ECS"],
-                            nature_energie_chauffage: residence["Nature de l'énergie chauffage"],
-                            nature_energie_ecs: residence["Nature de l'énergie ECS"],
+                            nature_energie_chauffage: residence["Nature de l'énergie chauffage"] ? String(residence["Nature de l'énergie chauffage"]).toUpperCase() : null,
+                            nature_energie_ecs: residence["Nature de l'énergie ECS"] ? String(residence["Nature de l'énergie ECS"]).toUpperCase() : null,
                             lettre_dpe: residence["Lettre DPE"],
-                            derniere_rehabilitation: residence["Dernière réhabilitation"]
+                            derniere_rehabilitation: residence["Dernière réhabilitation"],
+                            alerte: alerte
                         };
                     });
 
@@ -2516,6 +2818,19 @@
                     updateMap();
                     updateUI();
                 }
+
+                // 2. Ajout de la détection d'alerte lors du chargement des données (dans loadData, après window.globalChargesData = ...) :
+                rawData.forEach(residence => {
+                    const id = String(residence.intent_reference);
+                    const charges2025 = window.globalChargesData.filter(charge => String(charge['Intent référence']) === id && charge['Année'] === 2025);
+                    let totalReelle = 0, totalProvision = 0;
+                    charges2025.forEach(charge => {
+                        const montant = parseFloat(charge['Montant'] || 0);
+                        if (charge['Type'] === 'Valeur réelle') totalReelle += montant;
+                        if (charge['Type'] === 'Provision') totalProvision += montant;
+                    });
+                    residence._alerte = totalReelle > totalProvision;
+                });
             } catch (error) {
                 console.error('Erreur lors du chargement des données:', error);
             }
@@ -2591,7 +2906,7 @@
                 
                 return `
                     <div class="residence-list-item">
-                        <div class="residence-list-item-title">${residence.label || 'Sans nom'}</div>
+                        <div class="residence-list-item-title">${residence.label || 'Sans nom'} ${residence.alerte ? '<span title="Alerte : consommation supérieure à la provision" style="color:#c00;font-size:18px;vertical-align:middle;">⚠️</span>' : ''}</div>
                         
                         <div class="residence-list-item-tags">
                             <span class="residence-list-item-tag">
@@ -2684,6 +2999,63 @@
                 UIOM: "Unité d'incinération des ordures ménagères."
             };
             return labels[code] || code;
+        }
+
+        // Fonction pour créer un pin personnalisé selon l'alerte
+        function getCustomMarker(residence) {
+            if (residence.alerte) {
+                // Pin d'alerte : cercle gris, triangle jaune pâle centré, point d'exclamation centré
+                const alertIcon = L.divIcon({
+                    className: 'custom-alert-marker',
+                    html: `
+                        <div style="
+                            background:#fff;
+                            border-radius:50%;
+                            width:44px;height:44px;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 4px 16px rgba(80,80,80,0.10);
+                        ">
+                            <svg width='38' height='38' viewBox='0 0 38 38' fill='none' style='display:block;'>
+                                <circle cx='19' cy='19' r='17' stroke='#888' stroke-width='3' fill='#fff'/>
+                                <polygon points='19,10.5 29,25.5 9,25.5' fill='#FFF3C4' stroke='#888' stroke-width='2'/>
+                                <rect x='17.5' y='15' width='3' height='6' rx='1.5' fill='#888'/>
+                                <circle cx='19' cy='23' r='1.3' fill='#888'/>
+                            </svg>
+                        </div>
+                    `,
+                    iconSize: [44, 44],
+                    iconAnchor: [22, 44],
+                    popupAnchor: [0, -44]
+                });
+                return alertIcon;
+            } else {
+                // Pin classique : cercle blanc, contour gris, ombre douce, petit bâtiment stylisé au centre
+                return L.divIcon({
+                    className: 'custom-default-marker',
+                    html: `
+                        <div style="
+                            background:#fff;
+                            border-radius:50%;
+                            width:44px;height:44px;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 4px 16px rgba(80,80,80,0.10);
+                            border: 3px solid #888;
+                        ">
+                            <svg width='28' height='28' viewBox='0 0 28 28' fill='none' style='display:block;'>
+                                <circle cx='14' cy='14' r='12' fill='#888' fill-opacity='0.13'/>
+                                <rect x='7' y='7' width='14' height='14' rx='2' fill='#FFF3C4' stroke='#888' stroke-width='1.5'/>
+                                <rect x='9.5' y='9.5' width='3' height='3' rx='0.7' fill='#888' fill-opacity='0.25'/>
+                                <rect x='15.5' y='9.5' width='3' height='3' rx='0.7' fill='#888' fill-opacity='0.25'/>
+                                <rect x='9.5' y='15.5' width='3' height='3' rx='0.7' fill='#888' fill-opacity='0.25'/>
+                                <rect x='15.5' y='15.5' width='3' height='3' rx='0.7' fill='#888' fill-opacity='0.25'/>
+                            </svg>
+                        </div>
+                    `,
+                    iconSize: [44, 44],
+                    iconAnchor: [22, 44],
+                    popupAnchor: [0, -44]
+                });
+            }
         }
     </script>
 </body>
