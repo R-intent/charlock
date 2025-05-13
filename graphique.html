@@ -72,11 +72,67 @@
         }
 
         .filters-container {
-            background: white;
+            border: 1px solid #e0e0e0;
             border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            height: fit-content;
+            padding: 20px;
+            background: white;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: 32px;
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #19232d;
+        }
+
+        .filter-header svg {
+            margin-right: 8px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+        }
+
+        .filter-section h3 {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #19232d;
+        }
+
+        .filter-section h3 svg {
+            margin-right: 5px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 1.08em;
+            color: #222;
+            font-weight: 500;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 8px;
+            accent-color: #4ec9f5;
+            width: 20px;
+            height: 20px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 10px 0 18px 0;
         }
 
         .chart-container {
@@ -179,44 +235,11 @@
             margin-bottom: 8px;
         }
 
-        .filter-section {
-            margin-bottom: 24px;
-        }
-
-        .filter-section-title {
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .ratio-filter {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .ratio-filter:hover {
-            background-color: #f1f3f4;
-        }
-
-        .ratio-filter input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .ratio-filter label {
-            font-size: 16px;
-            color: #202124;
-            cursor: pointer;
+        .chart-container canvas {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
@@ -248,20 +271,18 @@
         </div>
 
         <div class="filters-container">
+            <div class="filter-header">
+                <svg width="28" height="28" viewBox="0 0 768 768" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="32" width="704" height="704" rx="120" stroke="#34444F" stroke-width="32"/><circle cx="192" cy="192" r="32" fill="#34444F"/><circle cx="384" cy="384" r="32" stroke="#34444F" stroke-width="32" fill="none"/><rect x="160" y="320" width="320" height="32" rx="16" fill="#34444F"/><rect x="160" y="576" width="320" height="32" rx="16" fill="#34444F"/><rect x="160" y="128" width="384" height="32" rx="16" fill="#34444F"/><circle cx="192" cy="576" r="16" fill="#34444F"/><rect x="448" y="192" width="192" height="32" rx="16" fill="#34444F"/><rect x="448" y="448" width="192" height="32" rx="16" fill="#34444F"/><rect x="448" y="320" width="96" height="32" rx="16" fill="#34444F"/><rect x="320" y="448" width="96" height="32" rx="16" fill="#34444F"/><rect x="192" y="512" width="64" height="64" rx="12" stroke="#34444F" stroke-width="32" fill="none"/></svg>
+                Filtres
+            </div>
             <div class="filter-section">
-                <div class="filter-section-title">Ratio des dépenses</div>
-                <div class="ratio-filter">
-                    <input type="radio" id="show-no-ratio" name="ratio-type" value="none" checked>
-                    <label for="show-no-ratio">Dépenses totales</label>
-                </div>
-                <div class="ratio-filter">
-                    <input type="radio" id="show-ratio-logement" name="ratio-type" value="logement">
-                    <label for="show-ratio-logement">Dépenses par logement</label>
-                </div>
-                <div class="ratio-filter">
-                    <input type="radio" id="show-ratio-m2" name="ratio-type" value="m2">
-                    <label for="show-ratio-m2">Dépenses par m² chauffés</label>
-                </div>
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 768 768" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="96" y="96" width="576" height="576" rx="120" stroke="#34444F" stroke-width="32" fill="none"/><rect x="192" y="512" width="80" height="128" rx="16" fill="#34444F"/><rect x="320" y="384" width="80" height="256" rx="16" fill="#34444F"/><rect x="448" y="256" width="80" height="384" rx="16" fill="#34444F"/></svg>
+                    Ratio des dépenses
+                </h3>
+                <label><input type="radio" name="ratio-type" value="none" checked>Dépenses totales</label>
+                <label><input type="radio" name="ratio-type" value="logement">Dépenses par logement</label>
+                <label><input type="radio" name="ratio-type" value="m2">Dépenses par m² chauffés</label>
             </div>
         </div>
     </div>
@@ -393,204 +414,60 @@
                             labels: years,
                             datasets: [
                                 {
-                                    label: `Charges réelles${ratioLabel}`,
-                                    data: chargesValues,
-                                    backgroundColor: chargesValues.map((charge, i) => 
-                                        charge > provisionsValues[i] ? 'rgba(241, 91, 103, 0.8)' : 'rgba(140, 198, 63, 0.8)'
-                                    ),
-                                    borderColor: chargesValues.map((charge, i) => 
-                                        charge > provisionsValues[i] ? '#F15B67' : '#8CC63F'
-                                    ),
-                                    borderWidth: 2,
-                                    borderRadius: 6,
-                                    barPercentage: 0.5
+                                    label: 'Provisions',
+                                    data: provisionsValues,
+                                    backgroundColor: 'rgba(94,214,250,0.4)',
+                                    borderRadius: 10,
+                                    barPercentage: 0.8,
+                                    categoryPercentage: 0.7,
+                                    order: 2,
+                                    grouped: false
                                 },
                                 {
-                                    label: `Provisions${ratioLabel}`,
-                                    data: provisionsValues,
-                                    backgroundColor: 'rgba(125, 211, 252, 0.8)',
-                                    borderColor: '#7DD3FC',
-                                    borderWidth: 2,
-                                    borderRadius: 6,
-                                    barPercentage: 0.5
+                                    label: 'Dépenses réelles',
+                                    data: chargesValues,
+                                    backgroundColor: '#F15B67',
+                                    borderRadius: 10,
+                                    barPercentage: 0.3,
+                                    categoryPercentage: 0.7,
+                                    order: 1
                                 }
                             ]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    grid: {
-                                        borderDash: [5, 5],
-                                        drawBorder: false,
-                                        color: 'rgba(0, 0, 0, 0.1)'
-                                    },
-                                    ticks: {
-                                        callback: function(value) {
-                                            return new Intl.NumberFormat('fr-FR', {
-                                                style: 'currency',
-                                                currency: 'EUR',
-                                                maximumFractionDigits: 0
-                                            }).format(value);
-                                        },
-                                        font: {
-                                            size: 12
-                                        }
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                    labels: {
+                                        color: '#111',
+                                        font: { size: 15, weight: 'bold', family: 'Inter, sans-serif' }
                                     }
                                 },
-                                x: {
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        font: {
-                                            size: 14,
-                                            weight: '500'
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(context.raw)}`;
                                         }
                                     }
                                 }
                             },
-                            plugins: {
-                                legend: {
-                                    display: false
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { font: { size: 16, weight: 'bold', family: 'Inter, sans-serif' }, color: '#111' }
                                 },
-                                tooltip: {
-                                    enabled: false,
-                                    callbacks: {
-                                        title: function(tooltipItems) {
-                                            const year = tooltipItems[0].label;
-                                            return `Année ${year}`;
-                                        },
-                                        label: function(context) {
-                                            const year = context.label;
-                                            const isProvisions = context.datasetIndex === 1;
-                                            const ratioType = document.querySelector('input[name="ratio-type"]:checked').value;
-                                            
-                                            if (isProvisions) {
-                                                const montant = new Intl.NumberFormat('fr-FR', {
-                                                    style: 'currency',
-                                                    currency: 'EUR',
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2
-                                                }).format(context.raw);
-                                                
-                                                return [`<div class="tooltip-row">
-                                                    <div class="tooltip-icon">💶</div>
-                                                    <div class="tooltip-label">Provisions</div>
-                                                    <div class="tooltip-amount">${montant}</div>
-                                                </div>`];
-                                            }
-
-                                            const categories = chargesCategoriesWithRatio[year];
-                                            const lines = [];
-
-                                            // En-tête
-                                            lines.push('<div class="tooltip-row">');
-                                            lines.push('  <div class="tooltip-icon">📊</div>');
-                                            lines.push('  <div class="tooltip-label">Détail des charges réelles</div>');
-                                            lines.push('  <div class="tooltip-amount"></div>');
-                                            lines.push('</div>');
-                                            lines.push('<div class="tooltip-separator"></div>');
-
-                                            // Mapping des catégories avec leurs icônes
-                                            const categoryIcons = {
-                                                "Montant total des dépenses d'eau": '💧',
-                                                "Montant des dépenses d'entretien des installations de production-distribution d'énergie": '⚡',
-                                                "Montant total des dépenses d'électricité des usages généraux": '🔌',
-                                                "Montant des dépenses d'entretien des ascenseurs": '⬆️',
-                                                "Montant des dépenses de comptage et de répartition des frais de chauffage": '📊',
-                                                "Montant total des dépenses totales pour le chauffage et l'ECS": '🔥',
-                                                "Montant total des dépenses de taxes récupérables (OM + balayage)": '🗑️',
-                                                "Montant total des dépenses affectées aux garages": '🚗',
-                                                "Montant total des dépenses d'entretien immobilier": '🏠'
-                                            };
-
-                                            // Fonction pour formater le montant
-                                            const formatMontant = (montant) => {
-                                                return new Intl.NumberFormat('fr-FR', {
-                                                    style: 'currency',
-                                                    currency: 'EUR',
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2
-                                                }).format(montant);
-                                            };
-
-                                            // Ajouter les catégories triées par montant décroissant
-                                            Object.entries(categories)
-                                                .sort(([,a], [,b]) => b - a)
-                                                .forEach(([categorie, montant]) => {
-                                                    const icon = categoryIcons[categorie] || '📌';
-                                                    const formattedMontant = formatMontant(montant);
-                                                    
-                                                    lines.push('<div class="tooltip-row">');
-                                                    lines.push(`  <div class="tooltip-icon">${icon}</div>`);
-                                                    lines.push(`  <div class="tooltip-label">${categorie}</div>`);
-                                                    lines.push(`  <div class="tooltip-amount">${formattedMontant}</div>`);
-                                                    lines.push('</div>');
-                                                });
-
-                                            // Ajouter le séparateur et le total
-                                            lines.push('<div class="tooltip-separator"></div>');
-                                            lines.push('<div class="tooltip-row tooltip-total">');
-                                            lines.push('  <div class="tooltip-icon">💰</div>');
-                                            lines.push('  <div class="tooltip-label">Total</div>');
-                                            lines.push(`  <div class="tooltip-amount">${formatMontant(chargesWithRatio[year])}</div>`);
-                                            lines.push('</div>');
-
-                                            return lines;
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { borderDash: [5, 5], color: '#ccc' },
+                                    ticks: {
+                                        color: '#111',
+                                        font: { size: 14, family: 'Inter, sans-serif' },
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
                                         }
-                                    },
-                                    external: function(context) {
-                                        // Supprimer l'ancien tooltip s'il existe
-                                        let tooltipEl = document.getElementById('chartjs-tooltip');
-                                        if (!tooltipEl) {
-                                            tooltipEl = document.createElement('div');
-                                            tooltipEl.id = 'chartjs-tooltip';
-                                            tooltipEl.innerHTML = '<div></div>';
-                                            document.body.appendChild(tooltipEl);
-                                        }
-
-                                        // Masquer si pas de tooltip
-                                        if (context.tooltip.opacity === 0) {
-                                            tooltipEl.style.opacity = 0;
-                                            return;
-                                        }
-
-                                        // Définir le contenu
-                                        const innerHtml = context.tooltip.body.map(b => b.lines).flat().join('');
-                                        const titleLines = context.tooltip.title || [];
-                                        
-                                        let html = '<div class="tooltip-content">';
-                                        html += `<div style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px;">${titleLines.join('<br>')}</div>`;
-                                        html += innerHtml;
-                                        html += '</div>';
-                                        
-                                        tooltipEl.querySelector('div').innerHTML = html;
-
-                                        // Mise à jour de la position
-                                        const position = context.chart.canvas.getBoundingClientRect();
-                                        const bodyFont = context.tooltip.options.bodyFont;
-
-                                        // Style du tooltip
-                                        Object.assign(tooltipEl.style, {
-                                            opacity: 1,
-                                            position: 'absolute',
-                                            left: position.left + window.pageXOffset + context.tooltip.caretX + 'px',
-                                            top: position.top + window.pageYOffset + context.tooltip.caretY + 'px',
-                                            font: bodyFont.string,
-                                            padding: '0',
-                                            pointerEvents: 'none',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                                            borderRadius: '8px',
-                                            border: '1px solid #E5E7EB',
-                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                                            transform: 'translate(-50%, 8px)',
-                                            marginTop: '8px',
-                                            maxWidth: '500px',
-                                            width: 'max-content'
-                                        });
                                     }
                                 }
                             }
